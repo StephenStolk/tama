@@ -6,7 +6,7 @@ import { Bell, MessageSquare, Plus, Search } from 'lucide-react'
 
 export default function Header() {
   return (
-    <header className="bg-white shadow">
+    <header className="bg-green-900 shadow">
       <div className="container mx-auto px-4 py-2 flex items-center justify-between">
         <Link href="/" className="text-2xl font-bold text-red-500">Tamas</Link>
         <div className="flex-1 max-w-xl mx-4">
