@@ -1,7 +1,7 @@
 
-import { CommunityCard } from "./components/CommunityCard/page"
-import { PostCard } from "./components/Post-Card/page"
-import { TrendCommunity } from "./components/TrendCommunity/page"
+import { CommunityCard } from "./communitycard/page"
+import { PostCard } from "./post-card/page"
+import { TrendCommunity } from "./TrendCommunity/page"
 
 export default function Home() {
   return (

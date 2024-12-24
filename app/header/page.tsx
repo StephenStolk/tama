@@ -7,10 +7,10 @@ import { Input } from '@/components/ui/input';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Bell, MessageSquare, Plus, Search, Menu as MenuIcon, X as CloseIcon } from 'lucide-react';
 
-export default function Header() {
+export const Header: React.FC = () => { // Fixed arrow function syntax
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const isLoggedIn = false; // Replace this with your actual authentication logic
-  const username = 'John Doe'; 
+  const username = 'John Doe';
 
   const toggleMenu = () => {
     setIsMobileMenuOpen((prev) => !prev);
@@ -63,7 +63,7 @@ export default function Header() {
           onClick={toggleMenu}
         >
           {isMobileMenuOpen ? (
-            <CloseIcon className="h-6 w-6 text-gray-700" /> // Ensure size and color
+            <CloseIcon className="h-6 w-6 text-gray-700" />
           ) : (
             <MenuIcon className="h-6 w-6 text-gray-700" />
           )}
@@ -116,4 +116,4 @@ export default function Header() {
       )}
     </header>
   );
-}
+};
