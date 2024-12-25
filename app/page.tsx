@@ -11,8 +11,8 @@ export default function Home() {
       <SidebarWrapper />
 
       {/* Main Content Area */}
-      <div className="flex-1 ml-[20%] mr-[20%] h-screen overflow-auto p-6 mt-6 no-scrollbar">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-1 gap-6">
+      <div className="flex-1 md:ml-[20%] md:mr-[20%] h-screen overflow-auto p-0 mt-8 no-scrollbar">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-1 md:gap-6">
           {/* Posts Section */}
           <PostCard />
         </div>
