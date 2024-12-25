@@ -5,6 +5,14 @@
 body {
   font-family: Arial, Helvetica, sans-serif;
 }
+/* Hides the scrollbar for all elements with the no-scrollbar class */
+.no-scrollbar::-webkit-scrollbar {
+  display: none; /* Chrome, Safari, and Edge */
+}
+.no-scrollbar {
+  -ms-overflow-style: none; /* IE and Edge */
+  scrollbar-width: none; /* Firefox */
+}
 
 @layer base {
   :root {
@@ -69,4 +77,5 @@ body {
   body {
     @apply bg-background text-foreground;
   }
+  
 }

@@ -1,119 +1,77 @@
 'use client';
 
-import { useState } from 'react';
 import Link from 'next/link';
+import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Bell, MessageSquare, Plus, Search, Menu as MenuIcon, X as CloseIcon } from 'lucide-react';
+import { Bell, MessageSquare, Plus, Search, Menu as MenuIcon } from 'lucide-react';
+import Sidebar from '../sidebar/page';
+export const Header: React.FC = () => { 
+  const [isSidebarOpen, setSidebarOpen] = useState(false);
 
-export const Header: React.FC = () => { // Fixed arrow function syntax
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const toggleSidebar = () => {
+    setSidebarOpen(!isSidebarOpen);
+  };
+
   const isLoggedIn = false; // Replace this with your actual authentication logic
   const username = 'John Doe';
 
-  const toggleMenu = () => {
-    setIsMobileMenuOpen((prev) => !prev);
-  };
-
   return (
-    <header className="bg-white shadow">
-      <div className="container mx-auto px-4 py-2 flex items-center justify-between">
-        {/* Logo */}
-        <Link href="/" className="text-2xl font-bold text-red-500">Tamas</Link>
+    <>
+      {/* Header */}
+      <header className="bg-white shadow fixed top-0 left-0 w-full z-50">
+        <div className="container mx-auto px-4 py-2 flex items-center justify-between">
+          {/* Hamburger Icon for Mobile */}
+          <button
+            className="md:hidden p-2 rounded z-50"
+            onClick={toggleSidebar}
+          >
+            <MenuIcon className="h-6 w-6" />
+          </button>
 
-        {/* Search Bar */}
-        <div className="flex-1 max-w-xl mx-4 hidden md:block">
-          <div className="relative">
-            <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 text-gray-400" />
-            <Input type="text" placeholder="Search Reddit" className="w-full pl-10" />
-          </div>
-        </div>
+          {/* Logo */}
+          <Link href="/" className="text-xl md:text-2xl font-bold text-red-500">
+            Tamas
+          </Link>
 
-        {/* Desktop Nav */}
-        <nav className="hidden md:flex items-center space-x-4">
-          <Button variant="ghost" size="icon">
-            <Plus className="h-5 w-5" />
-          </Button>
-          <Button variant="ghost" size="icon">
-            <MessageSquare className="h-5 w-5" />
-          </Button>
-          <Button variant="ghost" size="icon">
-            <Bell className="h-5 w-5" />
-          </Button>
-          {isLoggedIn ? (
-            <Link href="/profile">
-              <Avatar>
-                <AvatarImage src="/placeholder-user.jpg" alt="User" />
-                <AvatarFallback>{username.charAt(0)}</AvatarFallback>
-              </Avatar>
-            </Link>
-          ) : (
-            <Link href="/signup">
-              <Button variant="ghost">Sign Up</Button>
-            </Link>
-          )}
-        </nav>
-
-        {/* Mobile Menu Button */}
-        <Button
-          variant="ghost"
-          size="icon"
-          className="md:hidden"
-          onClick={toggleMenu}
-        >
-          {isMobileMenuOpen ? (
-            <CloseIcon className="h-6 w-6 text-gray-700" />
-          ) : (
-            <MenuIcon className="h-6 w-6 text-gray-700" />
-          )}
-        </Button>
-      </div>
-
-      {/* Mobile Nav Drawer */}
-      {isMobileMenuOpen && (
-        <>
-          {/* Overlay */}
-          <div
-            className="fixed inset-0 bg-black bg-opacity-50 z-20"
-            onClick={toggleMenu}
-          ></div>
-
-          {/* Mobile Nav Drawer */}
-          <div className="fixed top-0 left-0 w-full bg-white shadow-md z-30 md:hidden">
-            <div className="p-4">
-              <nav className="space-y-2">
-                <Link href="/feed" className="block text-gray-700">
-                  Feed
-                </Link>
-                <Link href="/clubs" className="block text-gray-700">
-                  Clubs
-                </Link>
-                <Link href="/trends" className="block text-gray-700">
-                  Trends
-                </Link>
-                <Link href="/notifications" className="block text-gray-700">
-                  Notifications
-                </Link>
-                <div className="mt-4">
-                  {isLoggedIn ? (
-                    <Link href="/profile">
-                      <Avatar>
-                        <AvatarImage src="/placeholder-user.jpg" alt="User" />
-                        <AvatarFallback>{username.charAt(0)}</AvatarFallback>
-                      </Avatar>
-                    </Link>
-                  ) : (
-                    <Link href="/signup">
-                      <Button className="w-full">Sign Up</Button>
-                    </Link>
-                  )}
-                </div>
-              </nav>
+          {/* Search Bar */}
+          <div className="flex-1 max-w-xl mx-4 hidden md:block">
+            <div className="relative">
+              <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 text-gray-400" />
+              <Input type="text" placeholder="Search Reddit" className="w-full pl-10" />
             </div>
           </div>
-        </>
-      )}
-    </header>
+
+          {/* Desktop Nav */}
+          <nav className="flex items-center space-x-3 md:space-x-4">
+            <Button variant="ghost" size="icon" className="p-1 md:p-2">
+              <Plus className="h-4 w-4 md:h-5 md:w-5" />
+            </Button>
+            <Button variant="ghost" size="icon" className="p-1 md:p-2">
+              <MessageSquare className="h-4 w-4 md:h-5 md:w-5" />
+            </Button>
+            <Button variant="ghost" size="icon" className="p-1 md:p-2">
+              <Bell className="h-4 w-4 md:h-5 md:w-5" />
+            </Button>
+            {isLoggedIn ? (
+              <Link href="/profile">
+                <Avatar className="h-8 w-8 md:h-10 md:w-10">
+                  <AvatarImage src="/placeholder-user.jpg" alt="User" />
+                  <AvatarFallback>{username.charAt(0)}</AvatarFallback>
+                </Avatar>
+              </Link>
+            ) : (
+              <Link href="/signup">
+                <Button variant="ghost" className="text-sm md:text-base">Sign Up</Button>
+              </Link>
+            )}
+          </nav>
+        </div>
+      </header>
+
+      {/* Sidebar (conditionally rendered) */}
+      <Sidebar isSidebarOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
+    </>
   );
 };

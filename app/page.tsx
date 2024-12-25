@@ -1,26 +1,25 @@
 
-import { CommunityCard } from "./communitycard/page"
-import { PostCard } from "./post-card/page"
-import { TrendCommunity } from "./TrendCommunity/page"
+
+import { PostCard } from "./post-card/page";
+import { SidebarWrapper } from "./sidebar/SidebarWrapper";
+import RightbarWrapper from "./rightbar/page";
 
 export default function Home() {
   return (
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+    <div className="flex">
+      {/* Sidebar Component */}
+      <SidebarWrapper />
 
-  {/* Posts Section */}
-  <PostCard />
+      {/* Main Content Area */}
+      <div className="flex-1 ml-[20%] mr-[20%] h-screen overflow-auto p-6 mt-6 no-scrollbar">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-1 gap-6">
+          {/* Posts Section */}
+          <PostCard />
+        </div>
+      </div>
 
-  {/* Sidebar Section */}
-  <div className="space-y-6">
-    {/* Top Communities Card */}
-    <TrendCommunity />
-
-    {/* Create a Community Card */}
-    <CommunityCard />
-    
-  </div>
-</div>
-
-  )
+      {/* Rightbar for large screens */}
+      <RightbarWrapper />
+    </div>
+  );
 }
-
