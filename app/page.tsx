@@ -1,7 +1,7 @@
 
 
 import { PostCard } from "./(main)/post-card/page";
-import { SidebarWrapper } from "./(main)/about/sidebar/SidebarWrapper";
+import { SidebarWrapper } from "./(main)/sidebar/SidebarWrapper";
 import RightbarWrapper from "./(main)/rightbar/page";
 
 export default function Home() {
