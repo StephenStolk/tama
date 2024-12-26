@@ -9,7 +9,7 @@ export const PostCard:React.FC = () => {
     return(
         <>
         <div className="md:col-span-2 space-y-6">
-    {[1, 2, 3].map((post) => (
+    {[1, 2, 3,4,5].map((post) => (
       <Card key={post} className="w-full">
         <CardHeader className="flex flex-row items-center space-x-4">
           <Avatar>
