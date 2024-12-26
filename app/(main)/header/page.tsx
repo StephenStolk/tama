@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Bell, MessageSquare, Plus, Search, Menu as MenuIcon } from 'lucide-react';
-import Sidebar from '../sidebar/page';
+import Sidebar from '../about/sidebar/page';
 export const Header: React.FC = () => { 
   const [isSidebarOpen, setSidebarOpen] = useState(false);
 

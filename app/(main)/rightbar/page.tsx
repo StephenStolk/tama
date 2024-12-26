@@ -1,7 +1,7 @@
 "use client"
 
 import React from 'react'
-import { TrendCommunity } from '../TrendCommunity/page'
+import { TrendCommunity } from '../bottombar/TrendCommunity/page'
 import { CommunityCard
  } from '../communitycard/page'
 

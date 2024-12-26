@@ -1,8 +1,8 @@
 
 
-import { PostCard } from "./post-card/page";
-import { SidebarWrapper } from "./sidebar/SidebarWrapper";
-import RightbarWrapper from "./rightbar/page";
+import { PostCard } from "./(main)/post-card/page";
+import { SidebarWrapper } from "./(main)/about/sidebar/SidebarWrapper";
+import RightbarWrapper from "./(main)/rightbar/page";
 
 export default function Home() {
   return (
