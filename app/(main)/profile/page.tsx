@@ -87,6 +87,9 @@ import { Label } from "@/components/ui/label"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { useRouter } from 'next/navigation'
+import { toast, ToastContainer } from 'react-toastify'; // Import Toastify functions
+import 'react-toastify/dist/ReactToastify.css'; // Import Toastify styles
+import "@/app/(main)/profile/Profile.css"
 
 export default function ProfilePage() {
   const [user, setUser] = useState({
@@ -167,13 +170,16 @@ export default function ProfilePage() {
       if (response.ok) {
         console.log('User updated successfully:', data)
         setSuccessMessage('Your profile has been updated successfully!')
+        toast.success('Profile updated successfully!');
         setLoading(false) // Stop loading
       } else {
         console.error('Failed to update user:', data.message)
+        toast.error('Failed to update profile. Please try again.');
         setLoading(false) // Stop loading
       }
     } catch (error) {
       console.error('Error updating user:', error)
+      toast.error('Error updating profile. Please try again.');
       setLoading(false) // Stop loading
     }
   }
@@ -239,6 +245,7 @@ export default function ProfilePage() {
           </form>
         </CardContent>
       </Card>
+      <ToastContainer />
     </div>
   )
 }
