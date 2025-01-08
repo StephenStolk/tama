@@ -103,6 +103,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
+import { toast, ToastContainer } from 'react-toastify';  // Import toast and ToastContainer
+import 'react-toastify/dist/ReactToastify.css';
 
 const Page: React.FC = () => {
   const [username, setUsername] = useState("");
@@ -116,16 +118,16 @@ const Page: React.FC = () => {
   // Form submission handler
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
+  
     // Basic client-side validation
     if (!username || !bio || !email || !password || !terms) {
       setError("Please fill out all fields and agree to the terms.");
       return;
     }
-
+  
     setLoading(true);
     setError("");
-
+  
     try {
       const response = await fetch("/api/signup", {
         method: "POST",
@@ -139,16 +141,18 @@ const Page: React.FC = () => {
           password,
         }),
       });
-
+  
       if (response.ok) {
-        // Handle success (you can redirect or show a success message)
-        alert("Sign up successful!");
+        // Handle success (using React Toastify for success message)
+        toast.success("Sign up successful!");  // Show success notification
       } else {
         const data = await response.json();
         setError(data.message || "An error occurred. Please try again.");
+        toast.error(data.message || "An error occurred. Please try again.");  // Show error notification
       }
     } catch (err) {
       setError("Failed to connect to the server.");
+      toast.error("Failed to connect to the server.");  // Show error notification
     } finally {
       setLoading(false);
     }
@@ -250,6 +254,7 @@ const Page: React.FC = () => {
           </a>
         </p>
       </form>
+      <ToastContainer />
     </div>
   );
 };

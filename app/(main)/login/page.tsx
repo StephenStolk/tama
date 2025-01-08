@@ -62,13 +62,15 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useRouter } from 'next/navigation';
+import { toast, ToastContainer } from 'react-toastify';  // Import toast and ToastContainer
+import 'react-toastify/dist/ReactToastify.css'; 
 
 const Login: React.FC = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-  const router = useRouter();
+  // const router = useRouter();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -90,12 +92,15 @@ const Login: React.FC = () => {
         localStorage.setItem("username", user.username); // Save username
         localStorage.setItem("token", data.token); // Save token
         // router.push("/"); // Redirect to home page or dashboard
+        toast.success("Login successful!");
         window.location.href = "/";
       } else {
         setError(data.message || "An error occurred. Please try again.");
+        toast.error(data.message || "An error occurred. Please try again.");
       }
     } catch (err) {
       setError("Failed to connect to the server.");
+      toast.error("Failed to connect to the server.");
     } finally {
       setLoading(false);
     }
@@ -151,6 +156,7 @@ const Login: React.FC = () => {
           </a>
         </p>
       </form>
+      <ToastContainer />
     </div>
   );
 };
