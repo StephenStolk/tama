@@ -7,6 +7,8 @@ import validator from "validator"; // Import validator for email validation
 export async function POST(request: Request) {
   const { username, bio, email, password } = await request.json();
 
+  await connectToDatabase();
+
   // Validate input
   if (!username || !email || !password || !bio) {
     return NextResponse.json(
@@ -23,22 +25,20 @@ export async function POST(request: Request) {
     );
   }
 
+   // Check if user already exists
+   const existingUser = await User.findOne({ email });
+   if (existingUser) {
+     return NextResponse.json(
+       { message: "User already exists" },
+       { status: 400 }
+     );
+   }
+
+   // Hash the password using bcryptjs
+   const salt = await bcrypt.genSalt(10); // Generate salt (rounds = 10)
+   const hashedPassword = await bcrypt.hash(password, salt); // Hash the password
+
   try {
-    // Connect to MongoDB
-    const db = await connectToDatabase();
-
-    // Check if user already exists
-    const existingUser = await User.findOne({ email });
-    if (existingUser) {
-      return NextResponse.json(
-        { message: "User already exists" },
-        { status: 400 }
-      );
-    }
-
-    // Hash the password using bcryptjs
-    const salt = await bcrypt.genSalt(10); // Generate salt (rounds = 10)
-    const hashedPassword = await bcrypt.hash(password, salt); // Hash the password
 
     // Create a new user
     const newUser = new User({

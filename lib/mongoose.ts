@@ -6,7 +6,7 @@ const MONGODB_URI = process.env.MONGO_URI!; // Your MongoDB connection URI from 
 
 // A mongoose singleton pattern to avoid multiple connections during hot reloading in development
 async function connectToDatabase() {
-  if (mongoose.connection.readyState === 1) {
+  if (mongoose.connections[0].readyState === 1) {
     return mongoose.connection;
   }
 

@@ -103,17 +103,20 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
-import { toast, ToastContainer } from 'react-toastify';  // Import toast and ToastContainer
+import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import { useRouter } from "next/navigation";
+import validator from "validator";
 
 const Page: React.FC = () => {
   const [username, setUsername] = useState("");
   const [bio, setBio] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [terms, setTerms] = useState(false); // Checkbox state
+  const [terms, setTerms] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const router = useRouter();
 
   // Form submission handler
   const handleSubmit = async (e: React.FormEvent) => {
@@ -124,7 +127,23 @@ const Page: React.FC = () => {
       setError("Please fill out all fields and agree to the terms.");
       return;
     }
-  
+
+    if(username.length<3) {
+      toast.error("The username should have atleast 3 characters.")
+      return;
+    }
+
+    if (!validator.isEmail(email)) {
+      toast.error("Please provide correct email.")
+        return;
+      }
+
+    if(password.length < 6){
+      toast.error("The password should have a minimum length of 6.")
+      // (error);
+      return;
+    }
+
     setLoading(true);
     setError("");
   
@@ -142,17 +161,19 @@ const Page: React.FC = () => {
         }),
       });
   
-      if (response.ok) {
+      if (response.ok || response.status === 201) {
         // Handle success (using React Toastify for success message)
         toast.success("Sign up successful!");  // Show success notification
+        router.push("/login")
       } else {
         const data = await response.json();
         setError(data.message || "An error occurred. Please try again.");
         toast.error(data.message || "An error occurred. Please try again.");  // Show error notification
       }
-    } catch (err) {
+    } catch (err: unknown) {
       setError("Failed to connect to the server.");
       toast.error("Failed to connect to the server.");  // Show error notification
+      console.log(err);
     } finally {
       setLoading(false);
     }

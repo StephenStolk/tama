@@ -61,21 +61,31 @@ import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useRouter } from 'next/navigation';
-import { toast, ToastContainer } from 'react-toastify';  // Import toast and ToastContainer
+//import { useRouter } from 'next/navigation';
+import { toast, ToastContainer } from 'react-toastify'; 
 import 'react-toastify/dist/ReactToastify.css'; 
+import validator from "validator"
 
 const Login: React.FC = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-  // const router = useRouter();
+  //const router = useRouter();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError("");
+
+    if(!email || !password){
+      toast.error("Email and password are required.")
+    }
+
+    if (!validator.isEmail(email)) {
+      toast.error("Please provide correct email format.")
+        return;
+      }
 
     try {
       const response = await fetch("/api/login", {
@@ -91,16 +101,17 @@ const Login: React.FC = () => {
         const user = data.user;
         localStorage.setItem("username", user.username); // Save username
         localStorage.setItem("token", data.token); // Save token
-        // router.push("/"); // Redirect to home page or dashboard
+        
         toast.success("Login successful!");
         window.location.href = "/";
       } else {
         setError(data.message || "An error occurred. Please try again.");
         toast.error(data.message || "An error occurred. Please try again.");
       }
-    } catch (err) {
+    } catch (err:unknown) {
       setError("Failed to connect to the server.");
       toast.error("Failed to connect to the server.");
+      console.log(err);
     } finally {
       setLoading(false);
     }
