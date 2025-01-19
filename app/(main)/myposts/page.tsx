@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
+
 interface Post {
   _id: string;
   title: string;
@@ -10,11 +11,12 @@ interface Post {
   createdAt: string;
 }
 
-const Page: React.FC = () => {
+const MyPosts: React.FC = () => {
   const [posts, setPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
+  
 
   useEffect(() => {
     const fetchUserPosts = async () => {
@@ -78,7 +80,9 @@ const Page: React.FC = () => {
             >
               <h2 className="text-xl font-semibold mb-2">{post.title}</h2>
               <p className="text-gray-600 line-clamp-3">{post.content}</p>
-              <p className="text-sm text-gray-400 mt-2">{new Date(post.createdAt).toLocaleDateString()}</p>
+              <p className="text-sm text-gray-400 mt-2">
+                {Intl.DateTimeFormat("en-US").format(new Date(post.createdAt))}
+              </p>
             </div>
           ))}
         </div>
@@ -87,4 +91,4 @@ const Page: React.FC = () => {
   );
 };
 
-export default Page;
+export default MyPosts;
