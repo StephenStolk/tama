@@ -75,11 +75,11 @@
 //     </>
 //   );
 // };
-
 'use client';
 
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation'; // Import Next.js router
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -87,6 +87,7 @@ import { Bell, MessageSquare, Plus, Search, Menu as MenuIcon } from 'lucide-reac
 import Sidebar from '../sidebar/page';
 
 export const Header: React.FC = () => {
+  const router = useRouter(); // Initialize router for navigation
   const [isSidebarOpen, setSidebarOpen] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [username, setUsername] = useState<string | null>(null);
@@ -98,7 +99,7 @@ export const Header: React.FC = () => {
 
   // Check login status and username on component mount
   useEffect(() => {
-    const storedUsername = localStorage.getItem("username");
+    const storedUsername = localStorage.getItem('username');
     if (storedUsername) {
       setIsLoggedIn(true);
       setUsername(storedUsername);
@@ -106,11 +107,15 @@ export const Header: React.FC = () => {
   }, []);
 
   const handleLogout = () => {
-    localStorage.removeItem("username");
-    localStorage.removeItem("token");
+    localStorage.removeItem('username');
+    localStorage.removeItem('token');
     setIsLoggedIn(false);
     setUsername(null);
     window.location.reload();
+  };
+
+  const handleCreatePost = () => {
+    router.push('/createpost'); // Navigate to the create-post page
   };
 
   return (
@@ -136,7 +141,12 @@ export const Header: React.FC = () => {
           </div>
 
           <nav className="flex items-center space-x-3 md:space-x-4">
-            <Button variant="ghost" size="icon" className="p-1 md:p-2">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="p-1 md:p-2"
+              onClick={handleCreatePost} // Add onClick to navigate to the create-post page
+            >
               <Plus className="h-4 w-4 md:h-5 md:w-5" />
             </Button>
             <Button variant="ghost" size="icon" className="p-1 md:p-2">

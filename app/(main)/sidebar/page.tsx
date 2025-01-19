@@ -11,7 +11,7 @@ interface SidebarProps {
 const Sidebar: React.FC<SidebarProps> = ({ isSidebarOpen, toggleSidebar }) => {
   const tablinks = [
     { name: 'Home', to: '/' },
-    { name: 'About', to: '/about' },
+    { name: 'My Posts', to: '/myposts' },
     { name: 'Feed', to: '/' },
     { name: 'Clubs', to: '/' },
   ];
