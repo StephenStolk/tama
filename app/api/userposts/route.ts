@@ -11,7 +11,7 @@ export async function GET(request: Request) {
   }
 
   try {
-    const decoded: any = jwt.verify(token, process.env.JWT_SECRET!);
+    const decoded: unknown = jwt.verify(token, process.env.JWT_SECRET!);
     await connectToDatabase();
 
     const posts = await Post.find({ author: decoded.userId }).sort({ createdAt: -1 });

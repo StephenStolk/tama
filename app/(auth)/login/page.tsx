@@ -65,6 +65,7 @@ import { Label } from "@/components/ui/label";
 import { toast, ToastContainer } from 'react-toastify'; 
 import 'react-toastify/dist/ReactToastify.css'; 
 import validator from "validator"
+import Link from 'next/link';
 
 const Login: React.FC = () => {
   const [email, setEmail] = useState("");
@@ -88,12 +89,13 @@ const Login: React.FC = () => {
       }
 
     try {
-      const response = await fetch("/api/login", {
+      const response = await fetch("/api/auth/login", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({ email, password }),
+        credentials: "include", 
       });
 
       const data = await response.json();
@@ -101,7 +103,7 @@ const Login: React.FC = () => {
         const user = data.user;
         localStorage.setItem("username", user.username); // Save username
         localStorage.setItem("token", data.token); // Save token
-        
+        console.log(user);
         toast.success("Login successful!");
         window.location.href = "/";
       } else {
@@ -162,9 +164,7 @@ const Login: React.FC = () => {
         {/* Create Account */}
         <p className="text-center mt-4 text-sm text-gray-600">
           Don’t have an account?{" "}
-          <a href="/signup" className="text-red-500 hover:underline">
-            Create Account
-          </a>
+          <Link href="/signup" className='text-blue-900'>Sign up</Link>
         </p>
       </form>
       <ToastContainer />

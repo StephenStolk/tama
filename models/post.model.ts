@@ -1,19 +1,33 @@
-import mongoose, { Document, Schema } from "mongoose";
+import mongoose, { Schema, Document } from "mongoose";
 
 interface IPost extends Document {
   title: string;
-  content: string;
-  author: mongoose.Types.ObjectId;
+  type: "text" | "image" | "video" | "poll" | "article"; 
+  content?: string;
+  media?: string[]; // Array of URLs for images, GIFs, or videos
+  pollOptions?: { option: string; votes: number }[]; 
+  author: mongoose.Schema.Types.ObjectId;
+  slug: string;
   createdAt: Date;
+  updatedAt: Date;
 }
 
-const PostSchema = new Schema<IPost>({
-  title: { type: String, required: true, minlength: 5 },
-  content: { type: String, required: true, minlength: 20 },
-  author: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
-  createdAt: { type: Date, default: Date.now },
-});
+const PostSchema = new Schema<IPost>(
+  {
+    title: { type: String, required: true },
+    type: { type: String, enum: ["text", "image", "video", "poll", "article"], required: true },
+    content: { type: String },
+    media: { type: [String] },
+    pollOptions: [
+      {
+        option: { type: String },
+        votes: { type: Number, default: 0 },
+      },
+    ],
+    author: { type: Schema.Types.ObjectId, ref: "User", required: true },
+    slug: { type: String, required: true, unique: true },
+  },
+  { timestamps: true }
+);
 
-const Post = mongoose.models.Post || mongoose.model<IPost>("Post", PostSchema);
-
-export default Post;
+export default mongoose.models.Post || mongoose.model<IPost>("Post", PostSchema);

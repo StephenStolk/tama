@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation";
 interface Post {
   _id: string;
   title: string;
+  slug: string;
   content: string;
   createdAt: string;
 }
@@ -53,9 +54,11 @@ const MyPosts: React.FC = () => {
     fetchUserPosts();
   }, []);
 
-  const handlePostClick = (postId: string) => {
-    router.push(`/posts/${postId}`); // Navigate to a specific post's page
+  const handlePostClick = (slug: string) => {
+    router.push(`/posts/${slug}`); // Redirect to the individual post page
   };
+  
+  
 
   if (loading) {
     return <div className="flex justify-center items-center min-h-screen">Loading...</div>;

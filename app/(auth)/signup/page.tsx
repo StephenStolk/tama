@@ -107,6 +107,7 @@ import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { useRouter } from "next/navigation";
 import validator from "validator";
+import Link from "next/link";
 
 const Page: React.FC = () => {
   const [username, setUsername] = useState("");
@@ -148,7 +149,7 @@ const Page: React.FC = () => {
     setError("");
   
     try {
-      const response = await fetch("/api/signup", {
+      const response = await fetch("/api/auth/signup", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -270,9 +271,7 @@ const Page: React.FC = () => {
         {/* Switch to Login */}
         <p className="text-center mt-4 text-sm text-gray-600">
           Already have an account?{" "}
-          <a href="/login" className="text-red-500 hover:underline">
-            Login here
-          </a>
+          <Link href="/login">Login here</Link>
         </p>
       </form>
       <ToastContainer />
