@@ -77,56 +77,50 @@
 //   )
 // }
 
-'use client'
+"use client"
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { useRouter } from 'next/navigation'
-import { toast, ToastContainer } from 'react-toastify'; // Import Toastify functions
-import 'react-toastify/dist/ReactToastify.css'; // Import Toastify styles
+import { useRouter } from "next/navigation"
+import { toast, ToastContainer } from "react-toastify"
+import "react-toastify/dist/ReactToastify.css"
 import "@/app/(main)/profile/Profile.css"
 
 export default function ProfilePage() {
   const [user, setUser] = useState({
-    username: '',
-    email: '',
-    bio: '',
+    username: "",
+    email: "",
+    bio: "",
   })
-  const [loading, setLoading] = useState(false)
-  const [successMessage, setSuccessMessage] = useState('')
+  const [loading, setLoading] = useState(true)
+  const [successMessage, setSuccessMessage] = useState("")
   const router = useRouter()
 
-  // Fetch user data from the backend (API)
   useEffect(() => {
     const fetchUserData = async () => {
-      const token = localStorage.getItem('token'); // Get token from localStorage
-      if (!token) {
-        // Redirect the user to the login page if they are not logged in
-        router.push('/login');
-        return;
-      }
-
       try {
-        const response = await fetch('/api/user', {
-          method: 'GET',
-          headers: {
-            'Authorization': `Bearer ${token}`,
-          },
+        const response = await fetch("/api/user", {
+          method: "GET",
+          credentials: "include", // This ensures cookies are sent with the request
         })
         const data = await response.json()
-        
+
         if (response.ok) {
-          setUser(data.user) // Set the fetched user data
+          setUser(data.user)
         } else {
-          console.error('Failed to fetch user data', data.message)
+          console.error("Failed to fetch user data", data.message)
+          if (response.status === 401) {
+            // Redirect to login if unauthorized
+            router.push("/login")
+          }
         }
       } catch (error) {
-        console.error('Error fetching user data:', error)
+        console.error("Error fetching user data:", error)
       } finally {
         setLoading(false)
       }
@@ -142,24 +136,15 @@ export default function ProfilePage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
-    setSuccessMessage('') // Clear any previous success messages
-
-    const token = localStorage.getItem('token') // Get the token from localStorage
-
-    if (!token) {
-      console.error('User is not authenticated')
-      setLoading(false)
-      return
-    }
+    setSuccessMessage("")
 
     try {
-      // Send the updated user data to the backend (PUT request)
-      const response = await fetch('/api/user', {
-        method: 'PUT',
+      const response = await fetch("/api/user", {
+        method: "PUT",
         headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
+        credentials: "include", // This ensures cookies are sent with the request
         body: JSON.stringify({
           username: user.username,
           bio: user.bio,
@@ -168,19 +153,18 @@ export default function ProfilePage() {
       const data = await response.json()
 
       if (response.ok) {
-        console.log('User updated successfully:', data)
-        setSuccessMessage('Your profile has been updated successfully!')
-        toast.success('Profile updated successfully!');
-        setLoading(false) // Stop loading
+        // console.log("User updated successfully:", data)
+        setSuccessMessage("Your profile has been updated successfully!")
+        toast.success("Profile updated successfully!")
       } else {
-        console.error('Failed to update user:', data.message)
-        toast.error('Failed to update profile. Please try again.');
-        setLoading(false) // Stop loading
+        console.error("Failed to update user:", data.message)
+        toast.error("Failed to update profile. Please try again.")
       }
     } catch (error) {
-      console.error('Error updating user:', error)
-      toast.error('Error updating profile. Please try again.');
-      setLoading(false) // Stop loading
+      console.error("Error updating user:", error)
+      toast.error("Error updating profile. Please try again.")
+    } finally {
+      setLoading(false)
     }
   }
 
@@ -199,11 +183,7 @@ export default function ProfilePage() {
           <CardTitle>Edit Profile</CardTitle>
         </CardHeader>
         <CardContent>
-          {successMessage && (
-            <div className="mb-4 text-green-600">
-              {successMessage} {/* Display success message */}
-            </div>
-          )}
+          {successMessage && <div className="mb-4 text-green-600">{successMessage}</div>}
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="flex items-center space-x-4">
               <Avatar className="w-20 h-20">
@@ -214,32 +194,15 @@ export default function ProfilePage() {
             </div>
             <div className="space-y-2">
               <Label htmlFor="username">Username</Label>
-              <Input
-                id="username"
-                name="username"
-                value={user.username}
-                onChange={handleChange}
-              />
+              <Input id="username" name="username" value={user.username} onChange={handleChange} />
             </div>
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                name="email"
-                type="email"
-                value={user.email}
-                disabled // Make email read-only
-              />
+              <Input id="email" name="email" type="email" value={user.email} disabled />
             </div>
             <div className="space-y-2">
               <Label htmlFor="bio">Bio</Label>
-              <Textarea
-                id="bio"
-                name="bio"
-                value={user.bio}
-                onChange={handleChange}
-                rows={4}
-              />
+              <Textarea id="bio" name="bio" value={user.bio} onChange={handleChange} rows={4} />
             </div>
             <Button type="submit">Save Changes</Button>
           </form>
@@ -249,3 +212,4 @@ export default function ProfilePage() {
     </div>
   )
 }
+
