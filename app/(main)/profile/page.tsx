@@ -77,6 +77,8 @@ export default function ProfilePage() {
 
       if (response.ok) {
         // console.log("User updated successfully:", data)
+        localStorage.setItem("username", user.username);
+        document.cookie = `username=${user.username}; path=/`;
         setSuccessMessage("Your profile has been updated successfully!");
         toast.success("Profile updated successfully!");
       } else {
