@@ -1,25 +1,36 @@
 // /createpost/page.tsx
-"use client"
+"use client";
 
-import { useState } from "react"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Checkbox } from "@/components/ui/checkbox"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { useState } from "react";
+// import { useRouter } from "next/navigation";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
-  Link,
-  ImageIcon,
-  ListOrdered,
-  List,
-  ChevronDown,
-} from "lucide-react"
-import NotePicker from "@/components/NotePicker"
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Link, ImageIcon, ListOrdered, List, ChevronDown } from "lucide-react";
+import NotePicker from "@/components/NotePicker";
+// import Cookies from "js-cookie";
 
 export default function CreatePost() {
-  const [title, setTitle] = useState("")
-  const [pollOptions, setPollOptions] = useState(["", ""])
+  const [title, setTitle] = useState("");
+  const [pollOptions, setPollOptions] = useState(["", ""]);
+  // const router = useRouter();
+
+  // useEffect(() => {
+  //   const token = Cookies.get("token");
+  //   console.log(token);
+  //   if (!token) {
+  //     router.push("/login");
+  //   }
+  // }, [router]);
 
   return (
     <div className="max-w-3xl mx-auto p-4">
@@ -88,10 +99,12 @@ export default function CreatePost() {
             onChange={(e) => setTitle(e.target.value)}
             maxLength={300}
           />
-          <div className="text-xs text-right text-gray-500 -mt-3 mb-2">{title.length}/300</div>
+          <div className="text-xs text-right text-gray-500 -mt-3 mb-2">
+            {title.length}/300
+          </div>
 
           <TabsContent value="post" className="m-0">
-           <NotePicker />
+            <NotePicker />
           </TabsContent>
 
           <TabsContent value="images" className="m-0">
@@ -114,13 +127,17 @@ export default function CreatePost() {
                   className="mb-2"
                   value={option}
                   onChange={(e) => {
-                    const newOptions = [...pollOptions]
-                    newOptions[index] = e.target.value
-                    setPollOptions(newOptions)
+                    const newOptions = [...pollOptions];
+                    newOptions[index] = e.target.value;
+                    setPollOptions(newOptions);
                   }}
                 />
               ))}
-              <Button variant="ghost" className="text-blue-500" onClick={() => setPollOptions([...pollOptions, ""])}>
+              <Button
+                variant="ghost"
+                className="text-blue-500"
+                onClick={() => setPollOptions([...pollOptions, ""])}
+              >
                 Add Option
               </Button>
             </div>
@@ -149,7 +166,11 @@ export default function CreatePost() {
             <Button variant="outline" size="sm">
               NSFW
             </Button>
-            <Button variant="outline" size="sm" className="flex items-center gap-1">
+            <Button
+              variant="outline"
+              size="sm"
+              className="flex items-center gap-1"
+            >
               Flair
               <ChevronDown className="h-4 w-4" />
             </Button>
@@ -169,7 +190,7 @@ export default function CreatePost() {
         </div>
       </Tabs>
     </div>
-  )
+  );
 }
 
 // I have updated the ui part for the create post. I need your help to add functionalities for bold, italics, list etc (others mentioned)

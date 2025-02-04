@@ -26,17 +26,35 @@ export const Header: React.FC = () => {
     setSidebarOpen(!isSidebarOpen);
   };
 
-  // Check login status and username on component mount
   useEffect(() => {
     const storedUsername = localStorage.getItem("username");
     if (storedUsername) {
       setIsLoggedIn(true);
       setUsername(storedUsername);
     }
+
+    const fetchUserData = async () => {
+      try {
+        const response = await fetch("/api/user", {
+          method: "GET",
+          credentials: "include",
+        });
+        const data = await response.json();
+
+        if (response.ok) {
+          setUsername(data.user.username); // Update username from the API response
+        }
+      } catch (err) {
+        console.error("Error fetching user data:", err);
+      }
+    };
+
+    if (!storedUsername) {
+      fetchUserData();
+    }
   }, []);
 
   const handleLogout = async () => {
-    // Remove from localStorage
     localStorage.removeItem("username");
     localStorage.removeItem("token");
 
