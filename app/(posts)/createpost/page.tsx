@@ -73,7 +73,7 @@ export default function CreatePost() {
           </div>
 
           <TabsContent value="post" className="m-0">
-            <NotePicker />
+            <NotePicker title={title} count={title.length}/>
           </TabsContent>
 
           <TabsContent value="images">
