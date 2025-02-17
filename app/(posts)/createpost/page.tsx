@@ -6,7 +6,7 @@ import { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Checkbox } from "@/components/ui/checkbox";
+// import { Checkbox } from "@/components/ui/checkbox";
 import {
   Select,
   SelectContent,
@@ -15,13 +15,17 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Link, ImageIcon, ListOrdered, List, ChevronDown } from "lucide-react";
+import { ChevronDown } from "lucide-react";
 import NotePicker from "@/components/NotePicker";
+import ImageUpload from "@/components/ImageUpload";
+import VideoUpload from "@/components/VideoUpload";
+import PollUpload from "@/components/PollUpload";
 // import Cookies from "js-cookie";
 
 export default function CreatePost() {
   const [title, setTitle] = useState("");
   const [pollOptions, setPollOptions] = useState(["", ""]);
+  const [selectedTab, setSelectedTab] = useState("");
   // const router = useRouter();
 
   // useEffect(() => {
@@ -81,41 +85,7 @@ export default function CreatePost() {
           </TabsContent>
 
           <TabsContent value="poll" className="m-0">
-            <div className="mb-4">
-              {pollOptions.map((option, index) => (
-                <Input
-                  key={index}
-                  placeholder={`Option ${index + 1}`}
-                  className="mb-2"
-                  value={option}
-                  onChange={(e) => {
-                    const newOptions = [...pollOptions];
-                    newOptions[index] = e.target.value;
-                    setPollOptions(newOptions);
-                  }}
-                />
-              ))}
-              <Button
-                variant="ghost"
-                className="text-blue-500"
-                onClick={() => setPollOptions([...pollOptions, ""])}
-              >
-                Add Option
-              </Button>
-            </div>
-            <div className="flex items-center gap-2 mb-4">
-              <span className="text-sm">Voting length:</span>
-              <Select defaultValue="3">
-                <SelectTrigger className="w-[180px]">
-                  <SelectValue placeholder="Select duration" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="1">1 day</SelectItem>
-                  <SelectItem value="3">3 days</SelectItem>
-                  <SelectItem value="7">7 days</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
+            <PollUpload title={title} count={title.length} />
           </TabsContent>
 
           <div className="flex gap-2 mb-4">

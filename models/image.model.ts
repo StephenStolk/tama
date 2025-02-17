@@ -16,7 +16,7 @@ const ImageSchema = new Schema<IImage>(
     type: {
         type: String,
         default: "image",
-        required: true
+        required: true,
     },
     imageUrl: { type: String, required: true},
     author: { type: Schema.Types.ObjectId, ref: "User", required: true },

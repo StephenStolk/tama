@@ -1,17 +1,17 @@
-import { NextRequest, NextResponse } from 'next/server';
-import cloudinary from '@/lib/cloudinary';
-import { cookies } from 'next/headers';
-import jwt, { JwtPayload } from 'jsonwebtoken';
-import slugify from 'slugify';
+import { NextRequest, NextResponse } from "next/server";
+import cloudinary from "@/lib/cloudinary";
+import { cookies } from "next/headers";
+import jwt, { JwtPayload } from "jsonwebtoken";
+import slugify from "slugify";
 import Image from "@/models/image.model";
-import connectToDatabase from '@/lib/mongoose';
-import User from '@/models/user.model';
+import connectToDatabase from "@/lib/mongoose";
+import User from "@/models/user.model";
 
 interface IJwtPayload extends JwtPayload {
   userId: string;
 }
 
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
   try {
     const token = (await cookies()).get("token")?.value;
 
@@ -63,16 +63,25 @@ export async function POST(request: Request) {
     const buffer = Buffer.from(bytes);
 
     const result = await new Promise<any>((resolve, reject) => {
-      const uploadStream = cloudinary.uploader.upload_stream(
-        { folder: "next-cloudinary-images", tags: [decoded.userId] },
-        (error, result) => {
-          if (error) {
-            return reject(error);
-          } else resolve(result);
-        }
-      );
-      uploadStream.end(buffer);
+      try {
+        const uploadStream = cloudinary.uploader.upload_stream(
+          { folder: "next-cloudinary-images", tags: [decoded.userId] },
+          (error, result) => {
+            if (error) {
+              console.error("Cloudinary Upload Error:", error);  // Log the actual error
+              reject(new Error("Cloudinary upload failed"));    // Return a descriptive error
+            } else {
+              resolve(result);
+            }
+          }
+        );
+        uploadStream.end(buffer);
+      } catch (err) {
+        console.error("Unexpected Error:", err);
+        reject(new Error("Unexpected error during upload"));
+      }
     });
+    
 
     const newImage = new Image({
       title,
@@ -84,10 +93,10 @@ export async function POST(request: Request) {
 
     await newImage.save();
 
-    const ImagePublicUrl = `/${user.username}/${newImage._id}/${slug}`;
+    const imageUrl = `/${user.username}/${newImage._id}/${slug}`;
 
     return NextResponse.json(
-      { message: "Post created successfully", ImagePublicUrl },
+      { message: "Post created successfully", imageUrl },
       { status: 201 }
     );
   } catch (error: unknown) {
