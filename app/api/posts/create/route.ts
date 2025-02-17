@@ -3,8 +3,14 @@ import { cookies } from "next/headers";
 import connectToDatabase from "@/lib/mongoose";
 import Post from "@/models/post.model";
 import User from "@/models/user.model";
-import jwt from "jsonwebtoken";
+import jwt, { JwtPayload } from "jsonwebtoken";
 import slugify from "slugify";
+import cloudinary from "@/lib/cloudinary";
+import { Readable } from "stream";
+
+interface IJwtPayload extends JwtPayload {
+  userId: string;
+}
 
 export async function POST(request: Request) {
   try {
@@ -16,9 +22,9 @@ export async function POST(request: Request) {
 
     let decoded;
     try {
-      decoded = jwt.verify(token, process.env.JWT_SECRET!);
+      decoded = jwt.verify(token, process.env.JWT_SECRET!) as IJwtPayload;
     } catch (error) {
-      console.log(error);
+      console.log("JWT Error:", error);
       return NextResponse.json({ message: "Invalid or expired token" }, { status: 401 });
     }
 
@@ -53,11 +59,18 @@ export async function POST(request: Request) {
 
     // Handle media uploads (if applicable)
     const media: string[] = [];
-    const mediaFile = formData.get("media") as File;
-    if (mediaFile) {
-      const buffer = await mediaFile.arrayBuffer();
-      const mediaUrl = await uploadToCloudinary(buffer); // Implement this function
-      media.push(mediaUrl);
+    const mediaEntries = formData.getAll("media");
+
+    if (mediaEntries.length > 0) {
+      for (const mediaEntry of mediaEntries) {
+        if (mediaEntry instanceof File) {
+          console.log("Uploading file:", mediaEntry.name);
+          const mediaUrl = await uploadToCloudinary(mediaEntry, decoded.userId);
+          media.push(mediaUrl);
+        } else {
+          console.error("Invalid media entry:", mediaEntry);
+        }
+      }
     }
 
     const newPost = new Post({
@@ -78,12 +91,42 @@ export async function POST(request: Request) {
       { message: "Post created successfully", postUrl },
       { status: 201 }
     );
-  } catch (error) {
-    console.error("Error creating post:", error);
+  } catch (error: unknown) {
+    console.log(`Error creating post: ${error.message}`);
     return NextResponse.json({ message: "Error creating post" }, { status: 500 });
   }
 }
-function uploadToCloudinary(buffer: ArrayBuffer) {
-  throw new Error("Function not implemented.");
-}
 
+// ✅ Updated Cloudinary Upload Function (Using Streams)
+async function uploadToCloudinary(file: File, userId: string): Promise<string> {
+  try {
+    // Convert ArrayBuffer to Buffer
+    const buffer = Buffer.from(await file.arrayBuffer());
+
+    // Create a readable stream from the Buffer
+    const stream = Readable.from(buffer);
+
+    const result = await new Promise((resolve, reject) => {
+      const uploadStream = cloudinary.uploader.upload_stream(
+        {
+          folder: "forum_posts",
+          tags: [userId],
+          resource_type: "auto", // Automatically detects image/video type
+        },
+        (error, result) => {
+          if (error) {
+            console.error("Cloudinary Upload Error:", error);
+            return reject(error);
+          }
+          resolve(result);
+        }
+      );
+      stream.pipe(uploadStream);
+    });
+
+    return (result as any).secure_url;
+  } catch (error) {
+    console.error("Cloudinary upload error:", error);
+    throw new Error("Failed to upload media");
+  }
+}

@@ -2,7 +2,6 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   reactStrictMode: true, // Ensures React runs in strict mode
-  swcMinify: true, // Enables SWC compiler for better performance
   async headers() {
     return [
       {

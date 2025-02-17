@@ -1,0 +1,36 @@
+import mongoose, {Schema, Document} from "mongoose";
+
+interface IPoll extends Document {
+    title: string;
+    type: "poll";
+    pollOptions?: {
+        option: string,
+        votes: number
+    }[];
+    author: mongoose.Schema.Types.ObjectId;
+    slug: string;
+    createdAt: Date;
+    updatedAt: Date;
+}
+
+const PollSchema = new Schema<IPoll>(
+    {
+        title: { type: String, required: true },
+    type: {
+        type: String,
+        default: "poll",
+        required: true
+    },
+    pollOptions: [
+      {
+        option: { type: String },
+        votes: { type: Number, default: 0 },
+      },
+    ],
+    author: { type: Schema.Types.ObjectId, ref: "User", required: true },
+    slug: { type: String, required: true, unique: true },
+  },
+  { timestamps: true }
+)
+
+export default mongoose.model<IPoll>("Poll", PollSchema);

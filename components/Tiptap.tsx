@@ -30,3 +30,4 @@ const Tiptap = ({onChange, content}: any) => {
 }
 
 export default Tiptap
+
