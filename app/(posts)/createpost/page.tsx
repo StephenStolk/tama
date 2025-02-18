@@ -4,29 +4,17 @@
 import { useState } from "react";
 // import { useRouter } from "next/navigation";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 // import { Checkbox } from "@/components/ui/checkbox";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { ChevronDown } from "lucide-react";
 import NotePicker from "@/components/NotePicker";
 import ImageUpload from "@/components/ImageUpload";
 import VideoUpload from "@/components/VideoUpload";
 import PollUpload from "@/components/PollUpload";
-import TagPicker from "@/components/AddTags";
 // import Cookies from "js-cookie";
 
 export default function CreatePost() {
   const [title, setTitle] = useState("");
-  const [pollOptions, setPollOptions] = useState(["", ""]);
-  const [selectedTab, setSelectedTab] = useState("");
   // const router = useRouter();
 
   // useEffect(() => {
@@ -52,7 +40,7 @@ export default function CreatePost() {
         </div>
       </div>
 
-      <Tabs defaultValue="post" onValueChange={setSelectedTab} className="w-full">
+      <Tabs defaultValue="post" className="w-full">
         <TabsList className="w-full justify-start h-auto p-0 bg-transparent border-b">
           <TabsTrigger value="post">Post</TabsTrigger>
           <TabsTrigger value="images">Images</TabsTrigger>
@@ -89,7 +77,6 @@ export default function CreatePost() {
             <PollUpload title={title} count={title.length} />
           </TabsContent>
 
-          {/* <TagPicker /> */}
         </div>
       </Tabs>
     </div>
