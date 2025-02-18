@@ -34,6 +34,8 @@ export async function POST(request: Request) {
     const pollOptions = formData.get("pollOptions")
       ? JSON.parse(formData.get("pollOptions") as string)
       : [];
+    const tags = formData.getAll("tags") as string[];
+    
 
     if (!title) {
       return NextResponse.json(
@@ -48,6 +50,12 @@ export async function POST(request: Request) {
                 message: "Poll is not defined"
             }, {status: 400}
         )
+    }
+
+    if(tags.length >2) {
+      return NextResponse.json({
+        message: "You can select upto 2 tags only"
+      }, { status: 400});
     }
 
     await connectToDatabase();
@@ -71,6 +79,7 @@ export async function POST(request: Request) {
       pollOptions,
       slug,
       author: decoded.userId,
+      tags,
     });
 
     await newPoll.save();

@@ -9,6 +9,7 @@ interface IPoll extends Document {
     }[];
     author: mongoose.Schema.Types.ObjectId;
     slug: string;
+    tags: string[];
     createdAt: Date;
     updatedAt: Date;
 }
@@ -29,6 +30,14 @@ const PollSchema = new Schema<IPoll>(
     ],
     author: { type: Schema.Types.ObjectId, ref: "User", required: true },
     slug: { type: String, required: true, unique: true },
+    tags: {
+      type: [String],
+      default: [],
+      validate: {
+          validator: (tags: string[]) => tags.length <=2,
+          message: "You can select upto 2 tags only.",
+      },
+  },
   },
   { timestamps: true }
 )

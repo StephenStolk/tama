@@ -6,6 +6,7 @@ interface IImage extends Document {
     imageUrl: string;
     author: mongoose.Schema.Types.ObjectId;
     slug: string;
+    tags: string[];
     createdAt: Date;
     updatedAt: Date;
 }
@@ -21,6 +22,14 @@ const ImageSchema = new Schema<IImage>(
     imageUrl: { type: String, required: true},
     author: { type: Schema.Types.ObjectId, ref: "User", required: true },
     slug: { type: String, required: true, unique: true },
+    tags: {
+        type: [String],
+        default: [],
+        validate: {
+            validator: (tags: string[]) => tags.length <=2,
+            message: "You can select upto 2 tags only.",
+        },
+    },
   },
   { timestamps: true }
 )

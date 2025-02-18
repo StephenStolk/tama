@@ -3,6 +3,8 @@ import React, {useState} from 'react'
 import { Input } from './ui/input'
 import { Button } from './ui/button';
 import { NextResponse } from 'next/server';
+import { ChevronDown } from 'lucide-react';
+import TagPicker from './AddTags';
 
 interface TitleProps {
   title: string;
@@ -12,6 +14,7 @@ interface TitleProps {
 const ImageUpload: React.FC<TitleProps> = ({title, count}) => {
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false)
   const [imageFiles, setImageFiles] = useState<File>();
+  const [tags, setTags] = useState<string[]>([]);
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) =>{
     if(e.target.files && e.target.files[0]){
@@ -31,6 +34,8 @@ const ImageUpload: React.FC<TitleProps> = ({title, count}) => {
     if(imageFiles) {
       formData.append("file",imageFiles);
     }
+
+    formData.append("tags", JSON.stringify(tags));
 
     try {
       const response = await fetch("/api/posts/images" , {
@@ -70,6 +75,7 @@ const ImageUpload: React.FC<TitleProps> = ({title, count}) => {
             <Button variant="outline">Save Draft</Button>
             <Button onClick={handleSubmit} disabled={isSubmitting}>{isSubmitting ? "Posting..." : "Post"}</Button>
           </div>
+          <TagPicker tags={tags} setTags={setTags}/>
     </>
   )
 }

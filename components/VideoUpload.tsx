@@ -3,6 +3,7 @@ import React, {useState} from 'react'
 import { Input } from './ui/input'
 import { Button } from './ui/button';
 import { NextResponse } from 'next/server';
+import TagPicker from './AddTags';
 
 interface TitleProps {
     title: string;
@@ -12,6 +13,7 @@ interface TitleProps {
 const VideoUpload: React.FC<TitleProps> = ({title, count}) => {
     const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
     const [videoFile, setVideoFile] = useState<File | null>(null);
+    const [tags, setTags] = useState<string[]>([]);
 
     const handleVideoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
       if(e.target.files && e.target.files[0]) {
@@ -29,6 +31,8 @@ const VideoUpload: React.FC<TitleProps> = ({title, count}) => {
       if(videoFile) {
         formData.append("file",videoFile);
       }
+
+      formData.append("tags", JSON.stringify(tags));
 
       if(!videoFile){
         return NextResponse.json({
@@ -76,6 +80,8 @@ const VideoUpload: React.FC<TitleProps> = ({title, count}) => {
             <Button variant="outline">Save Draft</Button>
             <Button onClick={handleSubmit} disabled={isSubmitting}>{isSubmitting ? "Posting..." : "Post"}</Button>
           </div>
+
+          <TagPicker tags={tags} setTags={setTags} />
     </>
   )
 }

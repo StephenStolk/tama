@@ -20,6 +20,7 @@ import NotePicker from "@/components/NotePicker";
 import ImageUpload from "@/components/ImageUpload";
 import VideoUpload from "@/components/VideoUpload";
 import PollUpload from "@/components/PollUpload";
+import TagPicker from "@/components/AddTags";
 // import Cookies from "js-cookie";
 
 export default function CreatePost() {
@@ -88,27 +89,7 @@ export default function CreatePost() {
             <PollUpload title={title} count={title.length} />
           </TabsContent>
 
-          <div className="flex gap-2 mb-4">
-            <Button variant="outline" size="sm">
-              OC
-            </Button>
-            <Button variant="outline" size="sm">
-              Spoiler
-            </Button>
-            <Button variant="outline" size="sm">
-              NSFW
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              className="flex items-center gap-1"
-            >
-              Flair
-              <ChevronDown className="h-4 w-4" />
-            </Button>
-          </div>
-
-          
+          {/* <TagPicker /> */}
         </div>
       </Tabs>
     </div>
