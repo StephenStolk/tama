@@ -181,7 +181,7 @@ const Page: React.FC = () => {
   };
 
   return (
-    <div className="container mx-auto px-4 py-8">
+    <div className="container mx-auto px-4 pt-20">
       <h1 className="text-3xl font-bold text-center mb-6">Sign Up</h1>
       <form className="max-w-md mx-auto space-y-4" onSubmit={handleSubmit}>
         {/* Username */}
@@ -271,7 +271,7 @@ const Page: React.FC = () => {
         {/* Switch to Login */}
         <p className="text-center mt-4 text-sm text-gray-600">
           Already have an account?{" "}
-          <Link href="/login">Login here</Link>
+          <Link href="/login" className="text-black font-medium underline underline-offset-1">Login here</Link>
         </p>
       </form>
       <ToastContainer />
