@@ -20,7 +20,7 @@ export default function RootLayout({
     <html lang="en">
       <body className={`${inter.className} no-scrollbar`}>
         <Header />
-        <main className="container mx-auto px-4 py-8">{children}</main>
+        <main className="container mx-auto px-4">{children}</main>
         <BottomBar />
       </body>
     </html>
