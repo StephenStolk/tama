@@ -4,7 +4,7 @@ interface IImage extends Document {
     title: string;
     type: "image";
     imageUrl: string;
-    author: mongoose.Schema.Types.ObjectId;
+    author: mongoose.Schema.Types.ObjectId | any;
     slug: string;
     tags: string[];
     createdAt: Date;

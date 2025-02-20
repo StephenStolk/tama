@@ -2,6 +2,12 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   reactStrictMode: true, // Ensures React runs in strict mode
+
+  // ✅ Correct placement of images configuration
+  images: {
+    domains: ["res.cloudinary.com"], // Allow Cloudinary images
+  },
+
   async headers() {
     return [
       {

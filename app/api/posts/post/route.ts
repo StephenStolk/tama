@@ -91,3 +91,132 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ message: "Error creating post" }, { status: 500 });
   }
 }
+
+
+
+
+
+// export async function GET(request: NextRequest) {
+//     try {
+//       await connectToDatabase();
+  
+//       const { searchParams } = new URL(request.url);
+//       const tag = searchParams.get("tags");
+  
+//       const query: Record<string, any> = {};
+//       if (tag) {
+//         query.tags = { $in: [tag] };
+//       }
+  
+//       const posts = await Post.find(query)
+//         .populate("author", "username")
+//         .sort({ createdAt: -1 });
+  
+//       if (!posts.length) {
+//         console.warn("No posts found.");
+//         return NextResponse.json([], { status: 200 }); // Return empty array instead of 404
+//       }
+  
+//       const postResponse = posts.map((post) => ({
+//         title: post.title,
+//         content: post.content,
+//         imageUrl: post.imageUrl,
+//         slug: post.slug,
+//         author: post.author.username,
+//         createdAt: post.createdAt,
+//         tags: post.tags,
+//       }));
+  
+//       return NextResponse.json(postResponse, { status: 200 });
+//     } catch (error) {
+//       console.error("Error fetching posts:", error);
+//       return NextResponse.json({ message: "Error fetching posts" }, { status: 500 });
+//     }
+//   }
+  
+
+
+
+export async function GET(request: NextRequest) {
+    try {
+      await connectToDatabase();
+  
+      const posts = await Post.find().populate("author","username");
+  
+      if(posts.length === 0) {
+        return NextResponse.json({
+          message: "No Post found"
+        }, { status: 404});
+      }
+      const postResponse = posts.map((post) => ({
+        _id: post._id,
+        title: post.title,
+        type: "post", // ✅ Add this to match frontend expectation
+        imageUrl: post.imageUrl,
+        slug: post.slug,
+        author: post.author.username, // ✅ Include author username
+        createdAt: post.createdAt,
+      }));
+    
+        return NextResponse.json(postResponse, { status: 200 });
+    } catch (error: unknown) {
+      console.log(`Error fetching images: ${error}`);
+      return NextResponse.json({ message: "Error fetching images" }, { status: 500 });
+    }
+  }
+
+
+
+//   also, i am getting this warning:
+// Property 'option' does not exist on type 'string'.ts(2339)
+// Property 'votes' does not exist on type 'string'.ts(2339)
+
+
+// import React from "react";
+// import { Card, CardContent, CardHeader, CardFooter } from "@/components/ui/card";
+// import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+// import { Button } from "@/components/ui/button";
+// import { ArrowBigUp, ArrowBigDown, Share, MessageSquare } from "lucide-react";
+
+// interface PollPostProps {
+//   post: {
+//     title: string;
+//     pollOptions: string[];
+//     author: string;
+//     createdAt: string;
+//   };
+// }
+
+// const PollPostCard: React.FC<PollPostProps> = ({ post }) => {
+//   return (
+//     <Card className="w-full">
+//       <CardHeader>
+//         <Avatar>
+//           <AvatarImage src="/placeholder-user.jpg" alt="User" />
+//           <AvatarFallback>U</AvatarFallback>
+//         </Avatar>
+//         <p className="text-sm font-medium">{post.author}</p>
+//         <p className="text-xs text-muted-foreground">{post.createdAt}</p>
+//       </CardHeader>
+//       <CardContent>
+//         <h2 className="text-lg font-semibold">{post.title}</h2>
+//         <div className="mt-2">
+//   {post.pollOptions.map((option, index) => (
+//     <Button key={index} variant="outline" className="w-full my-1">
+//       {option.option} ({option.votes} votes)
+//     </Button>
+//   ))}
+// </div>
+
+//       </CardContent>
+//       <CardFooter className="flex justify-between">
+//         <Button variant="ghost" size="icon"><ArrowBigUp className="h-5 w-5" /></Button>
+//         <Button variant="ghost" size="icon"><ArrowBigDown className="h-5 w-5" /></Button>
+//         <Button variant="ghost"><MessageSquare className="h-5 w-5" /> Comments</Button>
+//         <Button variant="ghost"><Share className="h-5 w-5" /> Share</Button>
+//       </CardFooter>
+//     </Card>
+//   );
+// };
+
+// export default PollPostCard;

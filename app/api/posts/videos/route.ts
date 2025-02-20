@@ -98,3 +98,33 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ message: "Error creating post" }, { status: 500 });
   }
 }
+
+export async function GET(request: NextRequest) {
+  try {
+    await connectToDatabase();
+
+    const videos = await Video.find()
+      .populate("author", "username") // ✅ Populate only `username`
+      .lean(); // ✅ Use lean() for performance
+
+    if (!videos.length) {
+      return NextResponse.json({ message: "No videos found" }, { status: 404 });
+    }
+
+    const videoResponse = videos.map((video) => ({
+      _id: video._id,
+      title: video.title,
+      type: "video", // ✅ Ensures frontend recognizes post type
+      videoUrl: video.videoUrl,
+      slug: video.slug,
+      author: video.author?.username, // ✅ Prevents errors if author is missing
+      createdAt: video.createdAt,
+    }));
+
+    return NextResponse.json(videoResponse, { status: 200 });
+  } catch (error: unknown) {
+    console.error(`Error fetching videos: ${error}`);
+    return NextResponse.json({ message: "Error fetching videos" }, { status: 500 });
+  }
+}
+

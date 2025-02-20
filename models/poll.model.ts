@@ -7,7 +7,7 @@ interface IPoll extends Document {
         option: string,
         votes: number
     }[];
-    author: mongoose.Schema.Types.ObjectId;
+    author: mongoose.Schema.Types.ObjectId | unknown;
     slug: string;
     tags: string[];
     createdAt: Date;

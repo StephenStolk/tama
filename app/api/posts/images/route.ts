@@ -112,3 +112,32 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ message: "Error creating post" }, { status: 500 });
   }
 }
+
+
+export async function GET(request: NextRequest) {
+  try {
+    await connectToDatabase();
+
+    const images = await Image.find().populate("author","username");
+
+    if(images.length === 0) {
+      return NextResponse.json({
+        message: "No Images found"
+      }, { status: 404});
+    }
+    const imageResponse = images.map((image) => ({
+      _id: image._id,
+      title: image.title,
+      type: "image", // ✅ Add this to match frontend expectation
+      imageUrl: image.imageUrl,
+      slug: image.slug,
+      author: image.author.username, // ✅ Include author username
+      createdAt: image.createdAt,
+    }));
+  
+      return NextResponse.json(imageResponse, { status: 200 });
+  } catch (error: unknown) {
+    console.log(`Error fetching images: ${error}`);
+    return NextResponse.json({ message: "Error fetching images" }, { status: 500 });
+  }
+}
