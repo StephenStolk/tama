@@ -90,7 +90,7 @@ export const PostCard: React.FC = () => {
   }
 
   return (
-    <div className="md:col-span-2 space-y-6">
+    <div className="md:col-span-2 space-y-6 py-14">
       {posts.map((post) => (
         <Card key={post.id} className="w-full">
           <CardHeader className="flex flex-row items-center space-x-4">
