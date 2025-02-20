@@ -5,7 +5,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation"; // Import Next.js router
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import {
   Bell,
   MessageSquare,
@@ -14,13 +14,20 @@ import {
   Menu as MenuIcon,
 } from "lucide-react";
 import Sidebar from "../sidebar/page";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { ChevronDown } from "lucide-react";
 
 export const Header: React.FC = () => {
   const router = useRouter(); // Initialize router for navigation
   const [isSidebarOpen, setSidebarOpen] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [username, setUsername] = useState<string | null>(null);
-  const [isHovered, setIsHovered] = useState(false); // New state to track hover
+  // const [isHovered, setIsHovered] = useState(false);
 
   const toggleSidebar = () => {
     setSidebarOpen(!isSidebarOpen);
@@ -123,28 +130,26 @@ export const Header: React.FC = () => {
               <Bell className="h-4 w-4 md:h-5 md:w-5" />
             </Button>
             {isLoggedIn ? (
-              <div
-                className="relative"
-                onMouseEnter={() => setIsHovered(true)} // Show logout on hover
-                onMouseLeave={() => setIsHovered(false)} // Hide logout when hover ends
-              >
-                <Link href="/profile">
-                  <Avatar className="h-8 w-8 md:h-10 md:w-10">
-                    <AvatarImage src="/placeholder-user.jpg" alt="User" />
-                    <AvatarFallback>
-                      {username?.slice(0, 2).toUpperCase()}
-                    </AvatarFallback>
-                  </Avatar>
-                </Link>
-                {isHovered && (
-                  <Button
-                    onClick={handleLogout}
-                    className="absolute top-0 right-0 mt-8 mr-2 p-1 text-sm text-white"
-                  >
-                    Logout
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" className="p-0">
+                    <Avatar className="h-8 w-8 md:h-10 md:w-10">
+                      <AvatarFallback>
+                        {username?.slice(0, 2).toUpperCase()}
+                      </AvatarFallback>
+                    </Avatar>
+                    <ChevronDown className="h-4 w-4" />
                   </Button>
-                )}
-              </div>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-40">
+                  <DropdownMenuItem asChild>
+                    <Link href="/profile">Profile</Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={handleLogout}>
+                    Logout
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             ) : (
               <Link href="/signup">
                 <Button variant="ghost" className="text-sm md:text-base">

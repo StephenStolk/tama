@@ -8,7 +8,7 @@ export default function Home() {
       <SidebarWrapper />
 
       {/* Main Content Area */}
-      <div className="flex-1 md:ml-[22%] md:mr-[22%] h-screen overflow-auto p-0 mt-12 no-scrollbar">
+      <div className="flex-1 md:ml-[22%] md:mr-[22%] h-screen overflow-auto p-0 no-scrollbar">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-1 md:gap-6">
           {/* Posts Section */}
           <PostCardPage />
