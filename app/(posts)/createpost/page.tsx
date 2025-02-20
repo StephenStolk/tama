@@ -1,7 +1,7 @@
 // /createpost/page.tsx
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 // import { useRouter } from "next/navigation";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
@@ -15,6 +15,8 @@ import PollUpload from "@/components/PollUpload";
 
 export default function CreatePost() {
   const [title, setTitle] = useState("");
+  const [username, setUsername] = useState<string | null>(null);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
   // const router = useRouter();
 
   // useEffect(() => {
@@ -25,27 +27,55 @@ export default function CreatePost() {
   //   }
   // }, [router]);
 
+  useEffect(() => {
+    const storedUsername = localStorage.getItem("username");
+    if (storedUsername) {
+      setIsLoggedIn(true);
+      setUsername(storedUsername);
+    }
+
+    const fetchUserData = async () => {
+      try {
+        const response = await fetch("/api/user", {
+          method: "GET",
+          credentials: "include",
+        });
+        const data = await response.json();
+
+        if (response.ok) {
+          setUsername(data.user.username); // Update username from the API response
+        }
+      } catch (err) {
+        console.error("Error fetching user data:", err);
+      }
+    };
+
+    if (!storedUsername) {
+      fetchUserData();
+    }
+  }, []);
+
   return (
-    <div className="max-w-3xl mx-auto p-4">
+    <div className="max-w-3xl mx-auto px-4 py-20">
       <div className="mb-6">
         <h1 className="text-xl font-semibold">Create a post</h1>
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2 mt-2">
             <Avatar className="h-8 w-8">
-              <AvatarImage src="/placeholder.svg" />
+              {/* <AvatarImage src="/placeholder.svg" /> */}
               <AvatarFallback>U</AvatarFallback>
             </Avatar>
-            <span className="text-sm">u/Username</span>
+            <span className="text-sm">u/{username}</span>
           </div>
         </div>
       </div>
 
       <Tabs defaultValue="post" className="w-full">
-        <TabsList className="w-full justify-start h-auto p-0 bg-transparent border-b">
+        <TabsList className="w-full justify-start h-auto mb-2 bg-transparent border-b-2 border-black">
           <TabsTrigger value="post">Post</TabsTrigger>
           <TabsTrigger value="images">Images</TabsTrigger>
           <TabsTrigger value="videos">Videos</TabsTrigger>
-          <TabsTrigger value="link">Link</TabsTrigger>
+          {/* <TabsTrigger value="link">Link</TabsTrigger> */}
           <TabsTrigger value="poll">Poll</TabsTrigger>
         </TabsList>
 
@@ -62,7 +92,7 @@ export default function CreatePost() {
           </div>
 
           <TabsContent value="post" className="m-0">
-            <NotePicker title={title} count={title.length}/>
+            <NotePicker title={title} count={title.length} />
           </TabsContent>
 
           <TabsContent value="images">
@@ -70,13 +100,12 @@ export default function CreatePost() {
           </TabsContent>
 
           <TabsContent value="videos">
-            <VideoUpload title={title} count={title.length}/>
+            <VideoUpload title={title} count={title.length} />
           </TabsContent>
 
           <TabsContent value="poll" className="m-0">
             <PollUpload title={title} count={title.length} />
           </TabsContent>
-
         </div>
       </Tabs>
     </div>
