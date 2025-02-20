@@ -1,9 +1,11 @@
 "use client"
-import React, { ChangeEvent, useState } from "react";
+import React, { ChangeEvent, useEffect, useState } from "react";
 import dynamic from "next/dynamic";
 import { Input } from "./ui/input";
 import { Button } from "./ui/button";
 import { NextResponse } from "next/server";
+import { useRouter } from "next/navigation";
+import TagPicker from "./AddTags";
 
 // Dynamically import Tiptap to avoid SSR issues
 const Tiptap = dynamic(() => import("./Tiptap"), { ssr: false });
@@ -16,6 +18,15 @@ const NotePicker: React.FC<TitleProps> = ({title, count}) => {
     const [content, setContent] = useState<string>("");
      const [isSubmitting, setIsSubmitting] = useState<boolean>(false)
      const [imageFile, setImageFile] = useState<File | null>(null);
+     const [dataUpdated, setDataUpdated] = useState<boolean>(false);
+     const router = useRouter();
+     const [tags, setTags] = useState<string[]>([]);
+
+     useEffect(() => {
+        if(dataUpdated) {
+            router.refresh();
+        }
+     }, [dataUpdated, router])
 
     const handleContentChange = (newContent: string) => {
         setContent(newContent);
@@ -36,6 +47,7 @@ const NotePicker: React.FC<TitleProps> = ({title, count}) => {
         const formData = new FormData();
         formData.append("title",title);
         formData.append("content", content);
+        formData.append("tags", JSON.stringify(tags));
         if(imageFile) {
             formData.append("file",imageFile);
         }
@@ -48,8 +60,10 @@ const NotePicker: React.FC<TitleProps> = ({title, count}) => {
 
             const data = await response.json();
             if(response.ok) {
-                alert("Post created successfully");
+                //alert("Post created successfully");
                 console.log("Post: ", data.post);
+                setDataUpdated(true);
+                router.push("/");
             } else {
                 console.error("Error creating post:", data.message);
         alert("Failed to create post");
@@ -63,6 +77,9 @@ const NotePicker: React.FC<TitleProps> = ({title, count}) => {
             });
         } finally {
             setIsSubmitting(false);
+            // router.push("/");
+            // title = "";
+            
         }
     };
 
@@ -83,6 +100,8 @@ const NotePicker: React.FC<TitleProps> = ({title, count}) => {
             {isSubmitting ? "Posting..." : "Post"}
           </Button>
         </div>
+
+        <TagPicker tags={tags} setTags={setTags} />
       </>
     );
 };

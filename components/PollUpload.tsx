@@ -6,6 +6,7 @@ import { Input } from './ui/input'
 import { Button } from './ui/button'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select'
 import { NextResponse } from 'next/server'
+import TagPicker from './AddTags'
 
 interface TitleProps {
     title: string;
@@ -15,7 +16,8 @@ interface TitleProps {
 const PollUpload: React.FC<TitleProps> = ({title, count}) => {
 
     const [votingLength, setVotingLength] = useState("3")
-    const [pollOptions, setPollOptions] = useState(["", ""])
+    const [pollOptions, setPollOptions] = useState(["", ""]);
+    const [tags, setTags] = useState<string[]>([]);
     const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
 
     const handleSubmit = async () => {
@@ -33,6 +35,7 @@ const PollUpload: React.FC<TitleProps> = ({title, count}) => {
 
           formData.append("pollOptions", JSON.stringify(formattedPollOptions));
           formData.append("votingLength", votingLength);
+          formData.append("tags", JSON.stringify(tags));
 
           try {
             const response = await fetch("/api/posts/polls", {
@@ -94,6 +97,7 @@ const PollUpload: React.FC<TitleProps> = ({title, count}) => {
             <Button variant="outline">Save Draft</Button>
             <Button onClick={handleSubmit} disabled={isSubmitting}>{isSubmitting ? "Posting..." : "Post"}</Button>
           </div>
+          <TagPicker tags={tags} setTags={setTags}/>
     </>
   )
 }

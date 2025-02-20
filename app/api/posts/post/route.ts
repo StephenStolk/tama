@@ -36,8 +36,16 @@ export async function POST(request: NextRequest) {
     const title = formData.get("title") as string;
     const content = formData.get("content") as string;
     const file = formData.get("file") as File | null;
+    const tags = formData.getAll("tags") as string[];
 
     if (!title || !content) return NextResponse.json({ message: "Title and content are required" }, { status: 400 });
+
+    if(tags.length >2) {
+        return NextResponse.json({
+            message: "You can put upto 2 tags only."
+        }, { status: 400}
+        );
+    }
 
     let securedUrl = null;
 
@@ -72,6 +80,7 @@ export async function POST(request: NextRequest) {
       imageUrl: securedUrl,
       slug,
       author: decoded.userId,
+      tags,
     });
 
     await newPost.save();

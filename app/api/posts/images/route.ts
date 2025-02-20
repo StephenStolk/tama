@@ -33,6 +33,7 @@ export async function POST(request: NextRequest) {
     const title = formData.get("title") as string;
     const type = formData.get("type") as string;
     const file = formData.get("file") as File | null;
+    const tags = formData.getAll("tags") as string[];
 
     if (!title) {
       return NextResponse.json({ message: "Title is required" }, { status: 400 });
@@ -44,6 +45,12 @@ export async function POST(request: NextRequest) {
 
     if (!file) {
       return NextResponse.json({ message: "File not found" }, { status: 400 });
+    }
+
+    if(tags.length >2) {
+      return NextResponse.json({
+        message: "You can select upto 2 tags only"
+      }, { status: 400});
     }
 
     await connectToDatabase();
@@ -89,6 +96,7 @@ export async function POST(request: NextRequest) {
       imageUrl: result.secure_url,
       slug,
       author: decoded.userId,
+      tags,
     });
 
     await newImage.save();
