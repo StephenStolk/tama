@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { Card, CardContent, CardHeader, CardFooter } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -6,6 +6,7 @@ import { ArrowBigUp, ArrowBigDown, Share, MessageSquare } from "lucide-react";
 
 interface VideoPostProps {
   post: {
+    _id: string;
     title: string;
     videoUrl: string;
     author: string;
@@ -16,6 +17,33 @@ interface VideoPostProps {
 }
 
 const VideoPostCard: React.FC<VideoPostProps> = ({ post }) => {
+
+    const [voteType, setVoteType] = useState<"upvote" | "downvote" | null>(null);
+    
+    const handleVote = async (newVoteType: "upvote" | "downvote") => {
+        try {
+            if(voteType === newVoteType) {
+                await fetch(`/api/posts/votes?postId=${post._id}`, {
+                    method: "DELETE",
+                    credentials: "include",
+                });
+                setVoteType(null);
+            } else {
+                await fetch("/api/posts/votes", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json"},
+                    credentials: "include",
+                    body: JSON.stringify({
+                        postId: post._id, voteType: newVoteType, type: "video" 
+                    }),
+                });
+                setVoteType(newVoteType);
+            }
+        } catch(error: unknown) {
+            alert(error);
+            console.error("Error handling vote:", error);
+        }
+    }
   return (
     <Card className="w-full">
       <CardHeader>
@@ -47,10 +75,10 @@ const VideoPostCard: React.FC<VideoPostProps> = ({ post }) => {
         )}
       </CardContent>
       <CardFooter className="flex justify-between">
-        <Button variant="ghost" size="icon">
+      <Button variant={voteType === "upvote" ? "default" : "ghost"} size="icon" onClick={() => handleVote("upvote")}>
           <ArrowBigUp className="h-5 w-5" />
         </Button>
-        <Button variant="ghost" size="icon">
+        <Button variant={voteType === "downvote" ? "default" : "ghost"} size="icon" onClick={() => handleVote("downvote")}>
           <ArrowBigDown className="h-5 w-5" />
         </Button>
         <Button variant="ghost">

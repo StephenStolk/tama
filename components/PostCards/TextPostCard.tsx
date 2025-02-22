@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { Card, CardContent, CardHeader, CardFooter } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -7,6 +7,7 @@ import Image from "next/image";
 
 interface TextPostProps {
   post: {
+    _id: string;
     title: string;
     content: string;
     imageUrl?: string;
@@ -18,6 +19,32 @@ interface TextPostProps {
 }
 
 const TextPostCard: React.FC<TextPostProps> = ({ post }) => {
+    const [voteType, setVoteType] = useState<"upvote" | "downvote" | null>(null);
+        
+        const handleVote = async (newVoteType: "upvote" | "downvote") => {
+            try {
+                if(voteType === newVoteType) {
+                    await fetch(`/api/posts/votes?postId=${post._id}`, {
+                        method: "DELETE",
+                        credentials: "include",
+                    });
+                    setVoteType(null);
+                } else {
+                    await fetch("/api/posts/votes", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json"},
+                        credentials: "include",
+                        body: JSON.stringify({
+                            postId: post._id, voteType: newVoteType, type: "video" 
+                        }),
+                    });
+                    setVoteType(newVoteType);
+                }
+            } catch(error: unknown) {
+                alert(error);
+                console.error("Error handling vote:", error);
+            }
+        }
   return (
     <Card className="w-full border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-300 rounded-lg">
       <CardHeader className="flex flex-row items-center gap-3 p-4 border-b border-gray-100">
@@ -59,12 +86,12 @@ const TextPostCard: React.FC<TextPostProps> = ({ post }) => {
       </CardContent>
       <CardFooter className="flex justify-between items-center p-4 border-t border-gray-100">
         <div className="flex gap-2">
-          <Button variant="ghost" size="icon">
-            <ArrowBigUp className="h-5 w-5 text-gray-500 hover:text-blue-600" />
-          </Button>
-          <Button variant="ghost" size="icon">
-            <ArrowBigDown className="h-5 w-5 text-gray-500 hover:text-red-600" />
-          </Button>
+           <Button variant={voteType === "upvote" ? "default" : "ghost"} size="icon" onClick={() => handleVote("upvote")}>
+                    <ArrowBigUp className="h-5 w-5" />
+                  </Button>
+                  <Button variant={voteType === "downvote" ? "default" : "ghost"} size="icon" onClick={() => handleVote("downvote")}>
+                    <ArrowBigDown className="h-5 w-5" />
+                  </Button>
         </div>
         <div className="flex gap-3">
           <Button variant="ghost" className="flex items-center gap-1 text-gray-600 hover:text-gray-900">
