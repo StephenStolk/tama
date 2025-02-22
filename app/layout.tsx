@@ -3,6 +3,8 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import { Header } from "./(main)/header/page";
 import BottomBar from "./(main)/bottombar/page";
+import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -19,6 +21,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`${inter.className} no-scrollbar`}>
+      <ToastContainer />
         <Header />
         <main className="container mx-auto px-4">{children}</main>
         <BottomBar />

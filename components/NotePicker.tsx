@@ -85,7 +85,7 @@ const NotePicker: React.FC<TitleProps> = ({title, count}) => {
 
     return (
         <>
-        <form className="max-w-3xl w-full grid place-items-center mx-auto pt-10 mb-10" onSubmit={handleSubmit}>
+        <form className="grid place-items-center pt-10 mb-10 overflow-x-auto" onSubmit={handleSubmit}>
           <Tiptap content={content} onChange={handleContentChange} />
         </form>
   
@@ -94,7 +94,7 @@ const NotePicker: React.FC<TitleProps> = ({title, count}) => {
           <Input type="file" accept="image/*" onChange={handleImageChange} />
         </div>
   
-        <div className="flex justify-end gap-2">
+        <div className="flex justify-end gap-2 mt-2">
           <Button variant="outline">Save Draft</Button>
           <Button type="submit" disabled={isSubmitting} onClick={handleSubmit}>
             {isSubmitting ? "Posting..." : "Post"}

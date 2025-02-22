@@ -120,8 +120,8 @@ const Login: React.FC = () => {
   };
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <h1 className="text-3xl font-bold text-center mb-6">Login</h1>
+    <div className="container mx-auto px-4 pt-20">
+      <h1 className="text-3xl font-bold text-center text-black mb-6">Login</h1>
       <form className="max-w-md mx-auto space-y-4" onSubmit={handleSubmit}>
         {/* Email */}
         <div>
@@ -164,7 +164,7 @@ const Login: React.FC = () => {
         {/* Create Account */}
         <p className="text-center mt-4 text-sm text-gray-600">
           Don’t have an account?{" "}
-          <Link href="/signup" className='text-blue-900'>Sign up</Link>
+          <Link href="/signup" className='text-black underline underline-offset-1'>Sign up</Link>
         </p>
       </form>
       <ToastContainer />
