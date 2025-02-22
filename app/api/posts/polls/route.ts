@@ -112,6 +112,7 @@ export async function GET(request: NextRequest) {
       type: "poll",
       pollOptions: poll.pollOptions,
       slug: poll.slug,
+      tags: poll.tags,
       author: poll.author?.username || "unknown", // ✅ Ensure username exists
       createdAt: poll.createdAt,
     }));

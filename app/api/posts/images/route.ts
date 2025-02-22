@@ -131,6 +131,7 @@ export async function GET(request: NextRequest) {
       type: "image", // ✅ Add this to match frontend expectation
       imageUrl: image.imageUrl,
       slug: image.slug,
+      tags: image.tags,
       author: image.author.username, // ✅ Include author username
       createdAt: image.createdAt,
     }));

@@ -117,6 +117,7 @@ export async function GET(request: NextRequest) {
       type: "video", // ✅ Ensures frontend recognizes post type
       videoUrl: video.videoUrl,
       slug: video.slug,
+      tags: video.tags,
       author: video.author?.username, // ✅ Prevents errors if author is missing
       createdAt: video.createdAt,
     }));

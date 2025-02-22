@@ -9,6 +9,8 @@ interface PollPostProps {
     title: string;
     pollOptions: string[];
     author: string;
+    slug: string;
+    tags: string[];
     createdAt: string;
   };
 }
@@ -24,8 +26,19 @@ const PollPostCard: React.FC<PollPostProps> = ({ post }) => {
         <p className="text-sm font-medium">{post.author}</p>
         <p className="text-xs text-muted-foreground">{post.createdAt}</p>
       </CardHeader>
+
+      
       <CardContent>
+      {post.tags && post.tags.length > 0 && (
+          <div className="mt-3 flex flex-wrap gap-2">
+            {post.tags.map((tag, index) => (
+              <span key={index} className="text-sm font-medium text-black">#{tag}</span>
+            ))}
+          </div>
+        )}
         <h2 className="text-lg font-semibold">{post.title}</h2>
+
+        
         <div className="mt-2">
   {post.pollOptions.map((option, index) => (
     <Button key={index} variant="outline" className="w-full my-1">

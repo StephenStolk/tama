@@ -154,6 +154,7 @@ export async function GET(request: NextRequest) {
         type: "post", // ✅ Add this to match frontend expectation
         imageUrl: post.imageUrl,
         slug: post.slug,
+        tags: post.tags,
         author: post.author.username, // ✅ Include author username
         createdAt: post.createdAt,
       }));

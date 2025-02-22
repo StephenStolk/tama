@@ -9,6 +9,8 @@ interface VideoPostProps {
     title: string;
     videoUrl: string;
     author: string;
+    slug: string;
+    tags: string[];
     createdAt: string;
   };
 }
@@ -27,6 +29,13 @@ const VideoPostCard: React.FC<VideoPostProps> = ({ post }) => {
         </p>
       </CardHeader>
       <CardContent>
+        {post.tags && post.tags.length > 0 && (
+          <div className="mt-3 flex flex-wrap gap-2">
+            {post.tags.map((tag, index) => (
+              <span key={index} className="text-sm font-medium text-black">#{tag}</span>
+            ))}
+          </div>
+        )}
         <h2 className="text-lg font-semibold">{post.title}</h2>
         {post.videoUrl ? (
           <video controls className="w-full mt-2 rounded-lg">
