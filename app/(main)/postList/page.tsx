@@ -88,7 +88,7 @@ const PostList = () => {
   if (loading) return <p>Loading posts...</p>;
 
   return (
-    <div className="space-y-6">
+    <div className="py-20 space-y-6">
       {posts.map((post) => {
         switch (post.type) {
           case "image":
