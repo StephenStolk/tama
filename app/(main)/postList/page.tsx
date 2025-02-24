@@ -23,60 +23,82 @@ const PostList = () => {
   const [posts, setPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
+//   useEffect(() => {
+//     const fetchPosts = async () => {
+//       try {
+//         const [textRes, imageRes, videoRes, pollRes] = await Promise.all([
+//           fetch("/api/posts/post"),
+//           fetch("/api/posts/images"),
+//           fetch("/api/posts/videos"),
+//           fetch("/api/posts/polls"),
+//         ]);
+
+//         // Check the status of each response and log it
+//         if (!textRes.ok) {
+//           console.error(
+//             "Failed to fetch text posts:",
+//             textRes.status,
+//             textRes.statusText
+//           );
+//         }
+//         if (!imageRes.ok) {
+//           console.error(
+//             "Failed to fetch image posts:",
+//             imageRes.status,
+//             imageRes.statusText
+//           );
+//         }
+//         if (!videoRes.ok) {
+//           console.error(
+//             "Failed to fetch video posts:",
+//             videoRes.status,
+//             videoRes.statusText
+//           );
+//         }
+//         if (!pollRes.ok) {
+//           console.error(
+//             "Failed to fetch poll posts:",
+//             pollRes.status,
+//             pollRes.statusText
+//           );
+//         }
+
+//         // Only parse JSON if the response was successful
+//         const textData = textRes.ok ? await textRes.json() : [];
+//         const imageData = imageRes.ok ? await imageRes.json() : [];
+//         const videoData = videoRes.ok ? await videoRes.json() : [];
+//         const pollData = pollRes.ok ? await pollRes.json() : [];
+
+//         const allPosts = [...textData, ...imageData, ...videoData, ...pollData];
+//         allPosts.sort(
+//           (a, b) =>
+//             new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+//         );
+//         setPosts(allPosts);
+//       } catch (error) {
+//         console.error("Error fetching posts:", error);
+//       } finally {
+//         setLoading(false);
+//       }
+//     };
+
+//     fetchPosts();
+//   }, []);
+
+
+useEffect(() => {
     const fetchPosts = async () => {
       try {
-        const [textRes, imageRes, videoRes, pollRes] = await Promise.all([
-          fetch("/api/posts/post"),
-          fetch("/api/posts/images"),
-          fetch("/api/posts/videos"),
-          fetch("/api/posts/polls"),
-        ]);
+        const res = await fetch("/api/posts/fetchall");
 
-        // Check the status of each response and log it
-        if (!textRes.ok) {
-          console.error(
-            "Failed to fetch text posts:",
-            textRes.status,
-            textRes.statusText
-          );
-        }
-        if (!imageRes.ok) {
-          console.error(
-            "Failed to fetch image posts:",
-            imageRes.status,
-            imageRes.statusText
-          );
-        }
-        if (!videoRes.ok) {
-          console.error(
-            "Failed to fetch video posts:",
-            videoRes.status,
-            videoRes.statusText
-          );
-        }
-        if (!pollRes.ok) {
-          console.error(
-            "Failed to fetch poll posts:",
-            pollRes.status,
-            pollRes.statusText
-          );
+        if (!res.ok) {
+          throw new Error(`Failed to fetch posts: ${res.status}`);
         }
 
-        // Only parse JSON if the response was successful
-        const textData = textRes.ok ? await textRes.json() : [];
-        const imageData = imageRes.ok ? await imageRes.json() : [];
-        const videoData = videoRes.ok ? await videoRes.json() : [];
-        const pollData = pollRes.ok ? await pollRes.json() : [];
-
-        const allPosts = [...textData, ...imageData, ...videoData, ...pollData];
-        allPosts.sort(
-          (a, b) =>
-            new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-        );
-        setPosts(allPosts);
+        const { posts } = await res.json();
+        setPosts(posts);
       } catch (error) {
-        console.error("Error fetching posts:", error);
+        console.error(error);
       } finally {
         setLoading(false);
       }

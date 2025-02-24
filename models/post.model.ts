@@ -16,7 +16,7 @@ const PostSchema = new Schema<IPost>({
   content: { type: String, required: true },
   imageUrl: { type: String, default: null }, // Optional image
   author: { type: Schema.Types.ObjectId, ref: "User", required: true },
-  slug: { type: String, required: true, unique: true },
+  slug: { type: String, required: true, unique: true},
   tags: {
     type: [String],
     default: [],
@@ -26,6 +26,12 @@ const PostSchema = new Schema<IPost>({
     },
 },
 }, {timestamps: true});
+
+PostSchema.index({ createdAt: -1 }); 
+PostSchema.index({ slug: 1 }); 
+PostSchema.index({ tags: 1 }); 
+PostSchema.index({ author: 1 }); 
+
 
 const Post = mongoose.models.Post || mongoose.model<IPost>("Post", PostSchema);
 export default Post;

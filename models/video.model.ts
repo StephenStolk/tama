@@ -34,4 +34,10 @@ const VideoSchema = new Schema<IVideo>(
   { timestamps: true }
 );
 
-export default mongoose.model<IVideo>("Video", VideoSchema);
+VideoSchema.index({ createdAt: -1 });
+VideoSchema.index({ slug: 1 }, { unique: true });
+VideoSchema.index({ tags: 1 });
+VideoSchema.index({ author: 1 });
+
+const Video = mongoose.models.Video || mongoose.model<IVideo>("Video", VideoSchema);
+export default Video;

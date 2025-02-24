@@ -104,8 +104,8 @@ export async function GET(request: NextRequest) {
     await connectToDatabase();
 
     const videos = await Video.find()
-      .populate("author", "username") // ✅ Populate only `username`
-      .lean(); // ✅ Use lean() for performance
+      .populate("author", "username") 
+      .lean(); 
 
     if (!videos.length) {
       return NextResponse.json({ message: "No videos found" }, { status: 404 });

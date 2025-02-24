@@ -44,6 +44,10 @@ const TextPostCard: React.FC<TextPostProps> = ({ post }) => {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
   const router = useRouter();
 
+  const stripHtml = (html: string) => {
+    return html.replace(/<\/?[^>]+(>|$)/g, ""); // Removes all HTML tags
+  };
+  
   const checkAuth = useCallback(async () => {
     try {
       const response = await fetch("/api/auth/status", {
@@ -215,7 +219,7 @@ const TextPostCard: React.FC<TextPostProps> = ({ post }) => {
           <h2 className="text-lg font-semibold text-gray-900 mb-2 cursor-pointer">
             {post.title}
           </h2>
-          <p className="text-sm text-gray-700 mb-4">{post.content}</p>
+          <p className="text-sm text-gray-700 mb-4">{stripHtml(post.content)}</p>
         </Link>
 
         {post.imageUrl && (

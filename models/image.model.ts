@@ -21,7 +21,7 @@ const ImageSchema = new Schema<IImage>(
     },
     imageUrl: { type: String, required: true},
     author: { type: Schema.Types.ObjectId, ref: "User", required: true },
-    slug: { type: String, required: true, unique: true },
+    slug: { type: String, required: true, unique: true, index: true },
     tags: {
         type: [String],
         default: [],
@@ -34,4 +34,10 @@ const ImageSchema = new Schema<IImage>(
   { timestamps: true }
 )
 
-export default mongoose.model<IImage>("Image", ImageSchema);
+ImageSchema.index({ createdAt: -1 });
+// ImageSchema.index({ slug: 1 }, { unique: true });
+ImageSchema.index({ tags: 1 });
+ImageSchema.index({ author: 1 });
+
+const ImageModel = mongoose.models.Image || mongoose.model<IImage>("Image", ImageSchema);
+export default ImageModel;

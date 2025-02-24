@@ -42,4 +42,11 @@ const PollSchema = new Schema<IPoll>(
   { timestamps: true }
 )
 
-export default mongoose.model<IPoll>("Poll", PollSchema);
+PollSchema.index({ createdAt: -1 }); 
+PollSchema.index({ tags: 1 }); 
+PollSchema.index({ slug: 1 }); 
+PollSchema.index({ author: 1 }); 
+
+
+const Poll = mongoose.models.Poll || mongoose.model<IPoll>("Poll", PollSchema);
+export default Poll;
