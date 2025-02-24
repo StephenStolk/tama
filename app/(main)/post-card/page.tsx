@@ -1,3 +1,4 @@
+import { PostCard } from "@/components/post-card"
 import PostList from "../postList/page"
 
 export default function PostCardPage() {
