@@ -1,51 +1,57 @@
-import React, { useEffect, useState } from "react";
-import Image from "next/image";
-import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { ArrowBigUp, ArrowBigDown, MessageSquare, Share } from "lucide-react";
-import { Input } from "../ui/input";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import Link from "next/link";
+"use client"
 
-interface ImagePostProps {
+import Link from "next/link"
+import type React from "react"
+import { useState, useEffect } from "react"
+import { Card, CardContent, CardHeader, CardFooter } from "@/components/ui/card"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { ArrowBigUp, ArrowBigDown, Share, MessageSquare } from "lucide-react"
+import Image from "next/image"
+
+interface PostProps {
   post: {
-    _id: string;
-    title: string;
-    imageUrl: string;
-    author: string;
-    createdAt: string;
-    tags: string[];
-    slug: string;
-  };
+    _id: string
+    title: string
+    content?: string
+    imageUrl?: string
+    videoUrl?: string
+    pollOptions?: { option: string; votes: number }[] 
+    author: string
+    slug: string
+    tags: string[]
+    createdAt: string
+  }
 }
 
 interface Comment {
-  _id: string;
-  author: { username: string };
-  content: string;
-  createdAt: string;
+  _id: string
+  author: { username: string }
+  content: string
+  createdAt: string
 }
 
-const ImagePostCard: React.FC<ImagePostProps> = ({ post }) => {
-  const [voteType, setVoteType] = useState<"upvote" | "downvote" | null>(null);
-  const [commentsOpen, setCommentsOpen] = useState(false);
-  const [comments, setComments] = useState<Comment[]>([]);
-  const [newComment, setNewComment] = useState("");
+const UnifiedPostCard: React.FC<PostProps> = ({ post }) => {
+  const [voteType, setVoteType] = useState<"upvote" | "downvote" | null>(null)
+  const [commentsOpen, setCommentsOpen] = useState(false)
+  const [comments, setComments] = useState<Comment[]>([])
+  const [newComment, setNewComment] = useState("")
 
   useEffect(() => {
-    if (commentsOpen) fetchComments();
-  }, [commentsOpen]);
+    if (commentsOpen) fetchComments()
+  }, [commentsOpen])
 
   const fetchComments = async () => {
     try {
-      const res = await fetch(`/api/posts/comments?postId=${post._id}`);
-      const data = await res.json();
-      setComments(Array.isArray(data.comments) ? data.comments : []);
+      const res = await fetch(`/api/posts/comments?postId=${post._id}`)
+      const data = await res.json()
+      setComments(Array.isArray(data.comments) ? data.comments : [])
     } catch (error) {
-      console.error("Failed to fetch comments:", error);
-      setComments([]); 
+      console.error("Failed to fetch comments:", error)
+      setComments([])
     }
-  };
+  }
 
   const handleVote = async (newVoteType: "upvote" | "downvote") => {
     try {
@@ -53,25 +59,24 @@ const ImagePostCard: React.FC<ImagePostProps> = ({ post }) => {
         await fetch(`/api/posts/votes?postId=${post._id}`, {
           method: "DELETE",
           credentials: "include",
-        });
-        setVoteType(null);
+        })
+        setVoteType(null)
       } else {
         await fetch("/api/posts/votes", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           credentials: "include",
-          body: JSON.stringify({ postId: post._id, voteType: newVoteType, type: "image" }),
-        });
-        setVoteType(newVoteType);
+          body: JSON.stringify({ postId: post._id, voteType: newVoteType, type: "post" }),
+        })
+        setVoteType(newVoteType)
       }
     } catch (error) {
-      alert("An error occurred while processing your vote.");
-      console.error("Error handling vote:", error);
+      console.error("Error handling vote:", error)
     }
-  };
+  }
 
   const handleCommentSubmit = async () => {
-    if (!newComment.trim()) return;
+    if (!newComment.trim()) return
 
     try {
       const res = await fetch("/api/posts/comments", {
@@ -79,16 +84,16 @@ const ImagePostCard: React.FC<ImagePostProps> = ({ post }) => {
         headers: { "Content-Type": "application/json" },
         credentials: "include",
         body: JSON.stringify({ postId: post._id, content: newComment }),
-      });
-      const data = await res.json();
+      })
+      const data = await res.json()
       if (res.ok) {
-        setComments((prev) => [...prev, data.comment]);
-        setNewComment("");
+        setComments((prev) => [...prev, data.comment])
+        setNewComment("")
       }
     } catch (error) {
-      console.error("Error submitting comment:", error);
+      console.error("Error submitting comment:", error)
     }
-  };
+  }
 
   return (
     <Card className="w-full mx-auto border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-300 rounded-lg">
@@ -105,11 +110,47 @@ const ImagePostCard: React.FC<ImagePostProps> = ({ post }) => {
 
       <CardContent className="p-4">
         <Link href={`/post/${post._id}`} passHref>
-          <h2 className="text-lg font-semibold text-gray-900 mb-2 cursor-pointer">{post.title}</h2>
+          
+            <h2 className="text-lg font-semibold text-gray-900 mb-2 cursor-pointer">{post.title}</h2>
+            {post.content && <p className="text-sm text-gray-700 mb-4">{post.content}</p>}
+          
         </Link>
 
+        {post.imageUrl && (
+          <div className="mb-4">
+            <Image
+              src={post.imageUrl || "/placeholder.svg"}
+              alt="Post Image"
+              width={0}
+              height={0}
+              sizes="100vw"
+              className="w-full h-auto rounded-lg"
+            />
+          </div>
+        )}
+
+        {post.videoUrl && (
+          <div className="mb-4">
+            <video controls className="w-full rounded-lg">
+              <source src={post.videoUrl} type="video/mp4" />
+              Your browser does not support the video tag.
+            </video>
+          </div>
+        )}
+
+        {post.pollOptions && (
+          <div className="mb-4 space-y-2">
+            {post.pollOptions.map((option, index) => (
+              <div key={index} className="flex justify-between items-center border p-2 rounded-md">
+                <span>{option.option}</span>
+                <span>{option.votes} votes</span>
+              </div>
+            ))}
+          </div>
+        )}
+
         {post.tags.length > 0 && (
-          <div className="flex flex-wrap gap-2 mb-4">
+          <div className="flex flex-wrap gap-2">
             {post.tags.map((tag, index) => (
               <span key={index} className="text-sm font-medium text-black">
                 #{tag}
@@ -117,17 +158,6 @@ const ImagePostCard: React.FC<ImagePostProps> = ({ post }) => {
             ))}
           </div>
         )}
-
-        <div className="mb-4">
-          <Image
-            src={post.imageUrl}
-            alt={post.title}
-            width={0}
-            height={0}
-            sizes="100vw"
-            className="w-full h-auto rounded-lg"
-          />
-        </div>
       </CardContent>
 
       <CardFooter className="flex flex-wrap justify-between items-center p-4 border-t border-gray-100">
@@ -182,9 +212,7 @@ const ImagePostCard: React.FC<ImagePostProps> = ({ post }) => {
                 <div key={comment._id} className="p-2 border rounded-lg">
                   <p className="text-sm font-semibold">{comment.author.username}</p>
                   <p className="text-sm">{comment.content}</p>
-                  <p className="text-xs text-muted-foreground">
-                    {new Date(comment.createdAt).toLocaleString()}
-                  </p>
+                  <p className="text-xs text-muted-foreground">{new Date(comment.createdAt).toLocaleString()}</p>
                 </div>
               ))
             ) : (
@@ -194,7 +222,7 @@ const ImagePostCard: React.FC<ImagePostProps> = ({ post }) => {
         </div>
       )}
     </Card>
-  );
-};
+  )
+}
 
-export default ImagePostCard;
+export default UnifiedPostCard
