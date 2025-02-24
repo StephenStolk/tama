@@ -12,7 +12,7 @@ interface PollPostProps {
     pollOptions: { option: string; votes: number }[];
     author: string;
     slug: string;
-    tags: string[];
+    tags: string[] | string; // Allow tags to be either an array or a string
     createdAt: string;
   };
 }
@@ -29,6 +29,42 @@ const PollPostCard: React.FC<PollPostProps> = ({ post }) => {
   const [commentsOpen, setCommentsOpen] = useState(false);
   const [comments, setComments] = useState<Comment[]>([]);
   const [newComment, setNewComment] = useState("");
+
+  // Enhanced parsing logic for tags
+  const parsedTags = (() => {
+    // console.log("Raw post.tags:", post.tags); // Debug: Check the raw input
+
+    if (Array.isArray(post.tags)) {
+      // If it's an array with a single string element like ["\"Technology\",\"Marvel\""]
+      if (post.tags.length === 1 && typeof post.tags[0] === "string") {
+        try {
+          // Parse the JSON string after removing escape characters
+          const tagString = post.tags[0].replace(/\\/g, ""); // Remove backslashes
+          const tagsArray = JSON.parse(tagString); // Parse into array
+          // console.log("Parsed tags:", tagsArray); // Debug: Check the parsed result
+          return tagsArray;
+        } catch (error) {
+          console.error("Error parsing tags:", error);
+          return [];
+        }
+      }
+      return post.tags; // If already a proper array, use it directly
+    }
+
+    if (typeof post.tags === "string") {
+      // Handle string cases like '#["Technology","Marvel"]'
+      let cleanedTags = post.tags
+        .replace(/^#\[/, "") // Remove leading #[
+        .replace(/\]$/, "") // Remove trailing ]
+        .replace(/['"]/g, ""); // Remove quotes
+
+      const tagsArray = cleanedTags.split(",").map((tag) => tag.trim());
+      // console.log("Parsed tags:", tagsArray); // Debug: Check the parsed result
+      return tagsArray;
+    }
+
+    return []; // Default to empty array if neither array nor string
+  })();
 
   useEffect(() => {
     if (commentsOpen) fetchComments();
@@ -111,10 +147,13 @@ const PollPostCard: React.FC<PollPostProps> = ({ post }) => {
           ))}
         </div>
 
-        {post.tags.length > 0 && (
-          <div className="mt-3 flex flex-wrap gap-2">
-            {post.tags.map((tag, index) => (
-              <span key={index} className="text-sm font-medium text-black">
+        {parsedTags.length > 0 && (
+          <div className="mt-3 flex flex-wrap gap-2 mb-4">
+            {parsedTags.map((tag, index) => (
+              <span
+                key={index}
+                className="inline-block bg-gray-100 text-gray-800 text-sm font-medium px-2.5 py-0.5 rounded-full border border-gray-200"
+              >
                 #{tag}
               </span>
             ))}
