@@ -1,27 +1,24 @@
-"use client";
-import { useEffect, useState } from "react";
-import ImagePostCard from "@/components/PostCards/ImagePostCard";
-import VideoPostCard from "@/components/PostCards/VideoPostCard";
-import TextPostCard from "@/components/PostCards/TextPostCard";
-import PollPostCard from "@/components/PostCards/PollPostCard";
+"use client"
+import { useEffect, useState } from "react"
+import UnifiedPostCard from "@/components/unified-post-card"
 
 interface Post {
-  slug: string;
-  tags: string[];
-  _id: string;
-  title: string;
-  type: "image" | "video" | "post" | "poll";
-  createdAt: string;
-  imageUrl?: string;
-  videoUrl?: string;
-  content?: string;
-  pollOptions?: string[];
-  author: string;
+  slug: string
+  tags: string[]
+  _id: string
+  title: string
+  type: "image" | "video" | "post" | "poll"
+  createdAt: string
+  imageUrl?: string
+  videoUrl?: string
+  content?: string
+  pollOptions?: { option: string; votes: number }[]
+  author: string
 }
 
 const PostList = () => {
-  const [posts, setPosts] = useState<Post[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [posts, setPosts] = useState<Post[]>([])
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     const fetchPosts = async () => {
@@ -31,106 +28,51 @@ const PostList = () => {
           fetch("/api/posts/images"),
           fetch("/api/posts/videos"),
           fetch("/api/posts/polls"),
-        ]);
+        ])
 
         // Check the status of each response and log it
         if (!textRes.ok) {
-          console.error(
-            "Failed to fetch text posts:",
-            textRes.status,
-            textRes.statusText
-          );
+          console.error("Failed to fetch text posts:", textRes.status, textRes.statusText)
         }
         if (!imageRes.ok) {
-          console.error(
-            "Failed to fetch image posts:",
-            imageRes.status,
-            imageRes.statusText
-          );
+          console.error("Failed to fetch image posts:", imageRes.status, imageRes.statusText)
         }
         if (!videoRes.ok) {
-          console.error(
-            "Failed to fetch video posts:",
-            videoRes.status,
-            videoRes.statusText
-          );
+          console.error("Failed to fetch video posts:", videoRes.status, videoRes.statusText)
         }
         if (!pollRes.ok) {
-          console.error(
-            "Failed to fetch poll posts:",
-            pollRes.status,
-            pollRes.statusText
-          );
+          console.error("Failed to fetch poll posts:", pollRes.status, pollRes.statusText)
         }
 
         // Only parse JSON if the response was successful
-        const textData = textRes.ok ? await textRes.json() : [];
-        const imageData = imageRes.ok ? await imageRes.json() : [];
-        const videoData = videoRes.ok ? await videoRes.json() : [];
-        const pollData = pollRes.ok ? await pollRes.json() : [];
+        const textData = textRes.ok ? await textRes.json() : []
+        const imageData = imageRes.ok ? await imageRes.json() : []
+        const videoData = videoRes.ok ? await videoRes.json() : []
+        const pollData = pollRes.ok ? await pollRes.json() : []
 
-        const allPosts = [...textData, ...imageData, ...videoData, ...pollData];
-        allPosts.sort(
-          (a, b) =>
-            new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-        );
-        setPosts(allPosts);
+        const allPosts = [...textData, ...imageData, ...videoData, ...pollData]
+        allPosts.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+        setPosts(allPosts)
       } catch (error) {
-        console.error("Error fetching posts:", error);
+        console.error("Error fetching posts:", error)
       } finally {
-        setLoading(false);
+        setLoading(false)
       }
-    };
+    }
 
-    fetchPosts();
-  }, []);
+    fetchPosts()
+  }, [])
 
-  if (loading) return <p>Loading posts...</p>;
+  if (loading) return <p>Loading posts...</p>
 
   return (
-    <div className="space-y-6">
-      {posts.map((post) => {
-        switch (post.type) {
-          case "image":
-            return (
-              <ImagePostCard
-                key={post._id}
-                post={{ ...post, imageUrl: post.imageUrl || "" }}
-              />
-            );
-          case "video":
-            return (
-              <VideoPostCard
-                key={post._id}
-                post={{ ...post, videoUrl: post.videoUrl || "" }}
-              />
-            );
-          case "post":
-            return (
-              <TextPostCard
-                key={post._id}
-                post={{
-                  ...post,
-                  content: post.content ?? "",
-                  slug: post.slug ?? "",
-                  tags: post.tags ?? [],
-                }}
-              />
-            );
-
-          case "poll":
-            return (
-              <PollPostCard
-                key={post._id}
-                post={{ ...post, pollOptions: post.pollOptions || [] }}
-              />
-            );
-          default:
-            return null;
-        }
-      })}
+    <div className="py-20 space-y-6">
+      {posts.map((post) => (
+        <UnifiedPostCard key={post._id} post={post} />
+      ))}
     </div>
-  );
-};
+  )
+}
 
-export default PostList;
+export default PostList
+
