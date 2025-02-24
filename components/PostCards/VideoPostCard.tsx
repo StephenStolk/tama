@@ -1,52 +1,93 @@
-"use client"
+"use client";
 
-import Link from "next/link"
-import React, { useState, useEffect } from "react"
-import { Card, CardContent, CardHeader, CardFooter } from "@/components/ui/card"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { ArrowBigUp, ArrowBigDown, Share, MessageSquare } from "lucide-react"
-import Image from "next/image"
+import Link from "next/link";
+import React, { useState, useEffect } from "react";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardFooter,
+} from "@/components/ui/card";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { ArrowBigUp, ArrowBigDown, Share, MessageSquare } from "lucide-react";
+import Image from "next/image";
 
 interface VideoPostProps {
   post: {
-    _id: string
-    title: string
-    videoUrl: string
-    author: string
-    slug: string
-    tags: string[]
-    createdAt: string
-  }
+    _id: string;
+    title: string;
+    videoUrl: string;
+    author: string;
+    slug: string;
+    tags: string[] | string; // Allow tags to be either an array or a string
+    createdAt: string;
+  };
 }
 
 interface Comment {
-  _id: string
-  author: { username: string }
-  content: string
-  createdAt: string
+  _id: string;
+  author: { username: string };
+  content: string;
+  createdAt: string;
 }
 
 const VideoPostCard: React.FC<VideoPostProps> = ({ post }) => {
-  const [voteType, setVoteType] = useState<"upvote" | "downvote" | null>(null)
-  const [commentsOpen, setCommentsOpen] = useState(false)
-  const [comments, setComments] = useState<Comment[]>([])
-  const [newComment, setNewComment] = useState("")
+  const [voteType, setVoteType] = useState<"upvote" | "downvote" | null>(null);
+  const [commentsOpen, setCommentsOpen] = useState(false);
+  const [comments, setComments] = useState<Comment[]>([]);
+  const [newComment, setNewComment] = useState("");
+
+  // Enhanced parsing logic for tags
+  const parsedTags = (() => {
+    // console.log("Raw post.tags:", post.tags); // Debug: Check the raw input
+
+    if (Array.isArray(post.tags)) {
+      // If it's an array with a single string element like ["\"Technology\",\"Marvel\""]
+      if (post.tags.length === 1 && typeof post.tags[0] === "string") {
+        try {
+          // Parse the JSON string after removing escape characters
+          const tagString = post.tags[0].replace(/\\/g, ""); // Remove backslashes
+          const tagsArray = JSON.parse(tagString); // Parse into array
+          // console.log("Parsed tags:", tagsArray); // Debug: Check the parsed result
+          return tagsArray;
+        } catch (error) {
+          console.error("Error parsing tags:", error);
+          return [];
+        }
+      }
+      return post.tags; // If already a proper array, use it directly
+    }
+
+    if (typeof post.tags === "string") {
+      // Handle string cases like '#["Technology","Marvel"]'
+      let cleanedTags = post.tags
+        .replace(/^#\[/, "") // Remove leading #[
+        .replace(/\]$/, "") // Remove trailing ]
+        .replace(/['"]/g, ""); // Remove quotes
+
+      const tagsArray = cleanedTags.split(",").map((tag) => tag.trim());
+      // console.log("Parsed tags:", tagsArray); // Debug: Check the parsed result
+      return tagsArray;
+    }
+
+    return []; // Default to empty array if neither array nor string
+  })();
 
   useEffect(() => {
-    if (commentsOpen) fetchComments()
-  }, [commentsOpen])
+    if (commentsOpen) fetchComments();
+  }, [commentsOpen]);
 
   const fetchComments = async () => {
     try {
-      const res = await fetch(`/api/posts/comments?postId=${post._id}`)
-      const data = await res.json()
-      setComments(data.comments || [])
+      const res = await fetch(`/api/posts/comments?postId=${post._id}`);
+      const data = await res.json();
+      setComments(data.comments || []);
     } catch (error) {
-      console.error("Failed to fetch comments:", error)
+      console.error("Failed to fetch comments:", error);
     }
-  }
+  };
 
   const handleVote = async (newVoteType: "upvote" | "downvote") => {
     try {
@@ -54,8 +95,8 @@ const VideoPostCard: React.FC<VideoPostProps> = ({ post }) => {
         await fetch(`/api/posts/votes?postId=${post._id}`, {
           method: "DELETE",
           credentials: "include",
-        })
-        setVoteType(null)
+        });
+        setVoteType(null);
       } else {
         await fetch("/api/posts/votes", {
           method: "POST",
@@ -66,17 +107,17 @@ const VideoPostCard: React.FC<VideoPostProps> = ({ post }) => {
             voteType: newVoteType,
             type: "video",
           }),
-        })
-        setVoteType(newVoteType)
+        });
+        setVoteType(newVoteType);
       }
     } catch (error) {
-      alert(error)
-      console.error("Error handling vote:", error)
+      alert(error);
+      console.error("Error handling vote:", error);
     }
-  }
+  };
 
   const handleCommentSubmit = async () => {
-    if (!newComment.trim()) return
+    if (!newComment.trim()) return;
 
     try {
       const res = await fetch("/api/posts/comments", {
@@ -84,17 +125,17 @@ const VideoPostCard: React.FC<VideoPostProps> = ({ post }) => {
         headers: { "Content-Type": "application/json" },
         credentials: "include",
         body: JSON.stringify({ postId: post._id, content: newComment }),
-      })
+      });
 
-      const data = await res.json()
+      const data = await res.json();
       if (res.ok) {
-        setComments((prev) => [...prev, data.comment])
-        setNewComment("")
+        setComments((prev) => [...prev, data.comment]);
+        setNewComment("");
       }
     } catch (error) {
-      console.error("Error submitting comment:", error)
+      console.error("Error submitting comment:", error);
     }
-  }
+  };
 
   return (
     <Card className="w-full mx-auto border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-300 rounded-lg">
@@ -105,13 +146,17 @@ const VideoPostCard: React.FC<VideoPostProps> = ({ post }) => {
         </Avatar>
         <div className="flex flex-col">
           <p className="text-sm font-medium text-gray-900">{post.author}</p>
-          <p className="text-xs text-gray-500">{new Date(post.createdAt).toLocaleDateString()}</p>
+          <p className="text-xs text-gray-500">
+            {new Date(post.createdAt).toLocaleDateString()}
+          </p>
         </div>
       </CardHeader>
 
       <CardContent className="p-4">
         <Link href={`/post/${post._id}`} passHref>
-          <h2 className="text-lg font-semibold text-gray-900 mb-2 cursor-pointer">{post.title}</h2>
+          <h2 className="text-base md:text-lg font-semibold text-gray-900 mb-2 cursor-pointer">
+            {post.title}
+          </h2>
         </Link>
 
         {post.videoUrl && (
@@ -123,10 +168,13 @@ const VideoPostCard: React.FC<VideoPostProps> = ({ post }) => {
           </div>
         )}
 
-        {post.tags.length > 0 && (
-          <div className="flex flex-wrap gap-2">
-            {post.tags.map((tag, index) => (
-              <span key={index} className="text-sm font-medium text-black">
+        {parsedTags.length > 0 && (
+          <div className="flex flex-wrap gap-2 mb-4">
+            {parsedTags.map((tag, index) => (
+              <span
+                key={index}
+                className="inline-block bg-gray-100 text-gray-800 text-xs md:text-sm font-medium px-2.5 py-0.5 rounded-full border border-gray-200"
+              >
                 #{tag}
               </span>
             ))}
@@ -159,7 +207,10 @@ const VideoPostCard: React.FC<VideoPostProps> = ({ post }) => {
           >
             <MessageSquare className="h-5 w-5" /> Comments
           </Button>
-          <Button variant="ghost" className="flex items-center gap-1 text-gray-600 hover:text-gray-900">
+          <Button
+            variant="ghost"
+            className="flex items-center gap-1 text-gray-600 hover:text-gray-900"
+          >
             <Share className="h-5 w-5" /> Share
           </Button>
         </div>
@@ -184,9 +235,13 @@ const VideoPostCard: React.FC<VideoPostProps> = ({ post }) => {
             {comments.length > 0 ? (
               comments.map((comment) => (
                 <div key={comment._id} className="p-2 border rounded-lg">
-                  <p className="text-sm font-semibold">{comment.author.username}</p>
+                  <p className="text-sm font-semibold">
+                    {comment.author.username}
+                  </p>
                   <p className="text-sm">{comment.content}</p>
-                  <p className="text-xs text-muted-foreground">{new Date(comment.createdAt).toLocaleString()}</p>
+                  <p className="text-xs text-muted-foreground">
+                    {new Date(comment.createdAt).toLocaleString()}
+                  </p>
                 </div>
               ))
             ) : (
@@ -196,7 +251,7 @@ const VideoPostCard: React.FC<VideoPostProps> = ({ post }) => {
         </div>
       )}
     </Card>
-  )
-}
+  );
+};
 
-export default VideoPostCard
+export default VideoPostCard;

@@ -14,7 +14,7 @@ interface ImagePostProps {
     imageUrl: string;
     author: string;
     createdAt: string;
-    tags: string[];
+    tags: string[] | string; // Allow tags to be either an array or a string
     slug: string;
   };
 }
@@ -32,6 +32,42 @@ const ImagePostCard: React.FC<ImagePostProps> = ({ post }) => {
   const [comments, setComments] = useState<Comment[]>([]);
   const [newComment, setNewComment] = useState("");
 
+  // Enhanced parsing logic for tags
+  const parsedTags = (() => {
+    // console.log("Raw post.tags:", post.tags); // Debug: Check the raw input
+
+    if (Array.isArray(post.tags)) {
+      // If it's an array with a single string element like ["\"Technology\",\"Marvel\""]
+      if (post.tags.length === 1 && typeof post.tags[0] === "string") {
+        try {
+          // Parse the JSON string after removing escape characters
+          const tagString = post.tags[0].replace(/\\/g, ""); // Remove backslashes
+          const tagsArray = JSON.parse(tagString); // Parse into array
+          // console.log("Parsed tags:", tagsArray); // Debug: Check the parsed result
+          return tagsArray;
+        } catch (error) {
+          console.error("Error parsing tags:", error);
+          return [];
+        }
+      }
+      return post.tags; // If already a proper array, use it directly
+    }
+
+    if (typeof post.tags === "string") {
+      // Handle string cases like '#["Technology","Marvel"]'
+      let cleanedTags = post.tags
+        .replace(/^#\[/, "") // Remove leading #[
+        .replace(/\]$/, "") // Remove trailing ]
+        .replace(/['"]/g, ""); // Remove quotes
+
+      const tagsArray = cleanedTags.split(",").map((tag) => tag.trim());
+      // console.log("Parsed tags:", tagsArray); // Debug: Check the parsed result
+      return tagsArray;
+    }
+
+    return []; // Default to empty array if neither array nor string
+  })();
+
   useEffect(() => {
     if (commentsOpen) fetchComments();
   }, [commentsOpen]);
@@ -43,7 +79,7 @@ const ImagePostCard: React.FC<ImagePostProps> = ({ post }) => {
       setComments(Array.isArray(data.comments) ? data.comments : []);
     } catch (error) {
       console.error("Failed to fetch comments:", error);
-      setComments([]); 
+      setComments([]);
     }
   };
 
@@ -108,10 +144,13 @@ const ImagePostCard: React.FC<ImagePostProps> = ({ post }) => {
           <h2 className="text-lg font-semibold text-gray-900 mb-2 cursor-pointer">{post.title}</h2>
         </Link>
 
-        {post.tags.length > 0 && (
+        {parsedTags.length > 0 && (
           <div className="flex flex-wrap gap-2 mb-4">
-            {post.tags.map((tag, index) => (
-              <span key={index} className="text-sm font-medium text-black">
+            {parsedTags.map((tag, index) => (
+              <span
+                key={index}
+                className="inline-block bg-gray-100 text-gray-800 text-sm font-medium px-2.5 py-0.5 rounded-full border border-gray-200"
+              >
                 #{tag}
               </span>
             ))}
