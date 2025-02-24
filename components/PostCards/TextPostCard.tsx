@@ -1,12 +1,18 @@
-'use client';
-import Link from 'next/link';
+"use client";
+import Link from "next/link";
 import React, { useState, useEffect, useCallback } from "react";
-import { Card, CardContent, CardHeader, CardFooter } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardFooter,
+} from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { ArrowBigUp, ArrowBigDown, Share, MessageSquare } from "lucide-react";
 import Image from "next/image";
 import { Input } from "@/components/ui/input";
+import { useRouter } from "next/navigation";
 
 interface TextPostProps {
   post: {
@@ -16,7 +22,7 @@ interface TextPostProps {
     imageUrl?: string;
     author: string;
     slug: string;
-    tags: string[] | string; // Allow tags to be either an array or a string
+    tags: string[] | string;
     createdAt: string;
   };
 }
@@ -33,43 +39,68 @@ const TextPostCard: React.FC<TextPostProps> = ({ post }) => {
   const [commentsOpen, setCommentsOpen] = useState(false);
   const [comments, setComments] = useState<Comment[]>([]);
   const [newComment, setNewComment] = useState("");
+  const [upvotes, setUpvotes] = useState<number>(0);
+  const [downvotes, setDownvotes] = useState<number>(0);
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
+  const router = useRouter();
 
-  // Enhanced parsing logic for tags
+  const checkAuth = useCallback(async () => {
+    try {
+      const response = await fetch("/api/auth/status", {
+        credentials: "include",
+      });
+      const data = await response.json();
+      setIsAuthenticated(data.isAuthenticated || false);
+      return data.isAuthenticated || false;
+    } catch (error: unknown) {
+      console.log(error);
+      setIsAuthenticated(false);
+      return false;
+    }
+  }, []);
+
+  const fetchVotes = useCallback(async () => {
+    try {
+      const result = await fetch(`/api/posts/votes?postId=${post._id}`);
+      const data = await result.json();
+
+      if (result.ok) {
+        setUpvotes(data.upvotes || 0);
+        setDownvotes(data.downvotes || 0);
+      }
+    } catch (error: unknown) {
+      console.error("Failed to fetch votes:", error);
+    }
+  }, [post._id]);
+
   const parsedTags = (() => {
-    // console.log("Raw post.tags:", post.tags); // Debug: Check the raw input
-
     if (Array.isArray(post.tags)) {
-      // If it's an array with a single string element like ["\"Technology\",\"Marvel\""]
       if (post.tags.length === 1 && typeof post.tags[0] === "string") {
         try {
-          // Parse the JSON string after removing escape characters
           const tagString = post.tags[0].replace(/\\/g, ""); // Remove backslashes
-          const tagsArray = JSON.parse(tagString); // Parse into array
-          // console.log("Parsed tags:", tagsArray); // Debug: Check the parsed result
+          const tagsArray = JSON.parse(tagString);
           return tagsArray;
         } catch (error) {
           console.error("Error parsing tags:", error);
           return [];
         }
       }
-      return post.tags; // If already a proper array, use it directly
+      return post.tags;
     }
 
     if (typeof post.tags === "string") {
-      
       const cleanedTags = post.tags
-        .replace(/^#\[/, "") 
-        .replace(/\]$/, "") 
-        .replace(/['"]/g, ""); 
+        .replace(/^#\[/, "")
+        .replace(/\]$/, "")
+        .replace(/['"]/g, "");
 
       const tagsArray = cleanedTags.split(",").map((tag) => tag.trim());
-     
+
       return tagsArray;
     }
 
-    return []; 
+    return [];
   })();
-
 
   const fetchComments = useCallback(async () => {
     try {
@@ -85,7 +116,21 @@ const TextPostCard: React.FC<TextPostProps> = ({ post }) => {
     if (commentsOpen) fetchComments();
   }, [commentsOpen, fetchComments]);
 
+  useEffect(() => {
+    fetchVotes();
+  }, [fetchVotes]);
+
+  useEffect(() => {
+    checkAuth();
+  }, [checkAuth]);
+
   const handleVote = async (newVoteType: "upvote" | "downvote") => {
+    const authCheck = await checkAuth();
+    if (!authCheck) {
+      router.push("/login");
+      return;
+    }
+
     try {
       if (voteType === newVoteType) {
         await fetch(`/api/posts/votes?postId=${post._id}`, {
@@ -93,14 +138,31 @@ const TextPostCard: React.FC<TextPostProps> = ({ post }) => {
           credentials: "include",
         });
         setVoteType(null);
+
+        if (newVoteType === "upvote") setUpvotes((prev: number) => prev - 1);
+        else setDownvotes((prev: number) => prev - 1);
       } else {
         await fetch("/api/posts/votes", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           credentials: "include",
-          body: JSON.stringify({ postId: post._id, voteType: newVoteType, type: "post" }),
+          body: JSON.stringify({
+            postId: post._id,
+            voteType: newVoteType,
+            type: "post",
+          }),
         });
         setVoteType(newVoteType);
+
+        if (newVoteType === "upvote") {
+          setUpvotes((prev: number) => prev + 1);
+          if (voteType === "downvote") setDownvotes((prev) => prev - 1);
+        } else {
+          setDownvotes((prev) => prev + 1);
+          if (voteType === "upvote") {
+            setUpvotes((prev) => prev - 1);
+          }
+        }
       }
     } catch (error) {
       console.error("Error handling vote:", error);
@@ -108,6 +170,12 @@ const TextPostCard: React.FC<TextPostProps> = ({ post }) => {
   };
 
   const handleCommentSubmit = async () => {
+    const authCheck = await checkAuth();
+    if (!authCheck) {
+      router.push("/login");
+      return;
+    }
+
     if (!newComment.trim()) return;
 
     try {
@@ -136,13 +204,17 @@ const TextPostCard: React.FC<TextPostProps> = ({ post }) => {
         </Avatar>
         <div className="flex flex-col">
           <p className="text-sm font-medium text-gray-900">{post.author}</p>
-          <p className="text-xs text-gray-500">{new Date(post.createdAt).toLocaleDateString()}</p>
+          <p className="text-xs text-gray-500">
+            {new Date(post.createdAt).toLocaleDateString()}
+          </p>
         </div>
       </CardHeader>
 
       <CardContent className="p-4">
         <Link href={`/post/${post._id}`} passHref>
-          <h2 className="text-lg font-semibold text-gray-900 mb-2 cursor-pointer">{post.title}</h2>
+          <h2 className="text-lg font-semibold text-gray-900 mb-2 cursor-pointer">
+            {post.title}
+          </h2>
           <p className="text-sm text-gray-700 mb-4">{post.content}</p>
         </Link>
 
@@ -181,6 +253,7 @@ const TextPostCard: React.FC<TextPostProps> = ({ post }) => {
             onClick={() => handleVote("upvote")}
           >
             <ArrowBigUp className="h-5 w-5" />
+            <span className="ml-1 text-sm">{upvotes}</span>
           </Button>
           <Button
             variant={voteType === "downvote" ? "default" : "ghost"}
@@ -188,8 +261,10 @@ const TextPostCard: React.FC<TextPostProps> = ({ post }) => {
             onClick={() => handleVote("downvote")}
           >
             <ArrowBigDown className="h-5 w-5" />
+            <span className="ml-1 text-sm">{downvotes}</span>
           </Button>
         </div>
+
         <div className="flex gap-3">
           <Button
             variant="ghost"
@@ -198,7 +273,10 @@ const TextPostCard: React.FC<TextPostProps> = ({ post }) => {
           >
             <MessageSquare className="h-5 w-5" /> Comments
           </Button>
-          <Button variant="ghost" className="flex items-center gap-1 text-gray-600 hover:text-gray-900">
+          <Button
+            variant="ghost"
+            className="flex items-center gap-1 text-gray-600 hover:text-gray-900"
+          >
             <Share className="h-5 w-5" /> Share
           </Button>
         </div>
@@ -223,9 +301,13 @@ const TextPostCard: React.FC<TextPostProps> = ({ post }) => {
             {comments.length > 0 ? (
               comments.map((comment) => (
                 <div key={comment._id} className="p-2 border rounded-lg">
-                  <p className="text-sm font-semibold">{comment.author.username}</p>
+                  <p className="text-sm font-semibold">
+                    {comment.author.username}
+                  </p>
                   <p className="text-sm">{comment.content}</p>
-                  <p className="text-xs text-muted-foreground">{new Date(comment.createdAt).toLocaleString()}</p>
+                  <p className="text-xs text-muted-foreground">
+                    {new Date(comment.createdAt).toLocaleString()}
+                  </p>
                 </div>
               ))
             ) : (

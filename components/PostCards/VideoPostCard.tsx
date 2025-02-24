@@ -12,6 +12,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ArrowBigUp, ArrowBigDown, Share, MessageSquare } from "lucide-react";
+import { useRouter } from "next/navigation";
 import Image from "next/image";
 
 interface VideoPostProps {
@@ -38,6 +39,39 @@ const VideoPostCard: React.FC<VideoPostProps> = ({ post }) => {
   const [commentsOpen, setCommentsOpen] = useState(false);
   const [comments, setComments] = useState<Comment[]>([]);
   const [newComment, setNewComment] = useState("");
+  const [upvotes, setUpvotes] = useState<number>(0);
+  const [downvotes, setDownvotes] = useState<number>(0);
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
+  const router = useRouter();
+
+  const checkAuth = useCallback(async () => {
+      try {
+        const response = await fetch("/api/auth/status", {
+          credentials: "include",
+        });
+        const data = await response.json();
+        setIsAuthenticated(data.isAuthenticated || false);
+        return data.isAuthenticated || false;
+      } catch (error: unknown) {
+        console.log(error);
+        setIsAuthenticated(false);
+        return false;
+      }
+    }, []);
+
+  const fetchVotes = useCallback(async () => {
+    try {
+        const result = await fetch(`/api/posts/votes?postId=${post._id}`);
+        const data = await result.json();
+
+        if(result.ok) {
+            setUpvotes(data.upvotes || 0);
+            setDownvotes(data.downvotes || 0);
+        }
+    } catch (error: unknown) {
+        console.error("Failed to fetch votes:", error);
+    }
+  }, [post._id])
 
   // Enhanced parsing logic for tags
   const parsedTags = (() => {
@@ -57,7 +91,6 @@ const VideoPostCard: React.FC<VideoPostProps> = ({ post }) => {
     }
 
     if (typeof post.tags === "string") {
-      // Handle string cases like '#["Technology","Marvel"]'
       const cleanedTags = post.tags
         .replace(/^#\[/, "") 
         .replace(/\]$/, "") 
@@ -80,11 +113,28 @@ const VideoPostCard: React.FC<VideoPostProps> = ({ post }) => {
     }
   }, [post._id]);
 
+
+
   useEffect(() => {
     if (commentsOpen) fetchComments();
   }, [commentsOpen, fetchComments]);
 
+  useEffect(() => {
+    fetchVotes();
+  }, [fetchVotes]);
+
+  useEffect(() => {
+    checkAuth();
+  }, [checkAuth]);
+
+
   const handleVote = async (newVoteType: "upvote" | "downvote") => {
+    const authCheck = await checkAuth();
+    if (!authCheck) {
+      router.push("/login");
+      return;
+    }
+
     try {
       if (voteType === newVoteType) {
         await fetch(`/api/posts/votes?postId=${post._id}`, {
@@ -92,6 +142,10 @@ const VideoPostCard: React.FC<VideoPostProps> = ({ post }) => {
           credentials: "include",
         });
         setVoteType(null);
+
+        if(newVoteType === "upvote") setUpvotes((prev: number) => prev - 1);
+        else setDownvotes((prev: number) => prev - 1);
+
       } else {
         await fetch("/api/posts/votes", {
           method: "POST",
@@ -104,6 +158,16 @@ const VideoPostCard: React.FC<VideoPostProps> = ({ post }) => {
           }),
         });
         setVoteType(newVoteType);
+
+        if(newVoteType === "upvote"){
+            setUpvotes((prev: number) => prev + 1);
+            if( voteType === "downvote") setDownvotes((prev) => prev - 1);
+        } else {
+            setDownvotes((prev) => prev + 1);
+            if(voteType === "upvote") {
+                setUpvotes((prev) => prev - 1);
+            }
+        }
       }
     } catch (error) {
       alert(error);
@@ -112,7 +176,13 @@ const VideoPostCard: React.FC<VideoPostProps> = ({ post }) => {
   };
 
   const handleCommentSubmit = async () => {
+    const authCheck = await checkAuth();
+    if (!authCheck) {
+      router.push("/login");
+      return;
+    }
     if (!newComment.trim()) return;
+   
 
     try {
       const res = await fetch("/api/posts/comments", {
@@ -178,22 +248,25 @@ const VideoPostCard: React.FC<VideoPostProps> = ({ post }) => {
       </CardContent>
 
       <CardFooter className="flex flex-wrap justify-between items-center p-4 border-t border-gray-100">
-        <div className="flex gap-2 mb-2 sm:mb-0">
-          <Button
-            variant={voteType === "upvote" ? "default" : "ghost"}
-            size="icon"
-            onClick={() => handleVote("upvote")}
-          >
-            <ArrowBigUp className="h-5 w-5" />
-          </Button>
-          <Button
-            variant={voteType === "downvote" ? "default" : "ghost"}
-            size="icon"
-            onClick={() => handleVote("downvote")}
-          >
-            <ArrowBigDown className="h-5 w-5" />
-          </Button>
-        </div>
+      <div className="flex gap-2 mb-2 sm:mb-0">
+  <Button
+    variant={voteType === "upvote" ? "default" : "ghost"}
+    size="icon"
+    onClick={() => handleVote("upvote")}
+  >
+    <ArrowBigUp className="h-5 w-5" />
+    <span className="ml-1 text-sm">{upvotes}</span>
+  </Button>
+  <Button
+    variant={voteType === "downvote" ? "default" : "ghost"}
+    size="icon"
+    onClick={() => handleVote("downvote")}
+  >
+    <ArrowBigDown className="h-5 w-5" />
+    <span className="ml-1 text-sm">{downvotes}</span>
+  </Button>
+</div>
+
         <div className="flex gap-3">
           <Button
             variant="ghost"

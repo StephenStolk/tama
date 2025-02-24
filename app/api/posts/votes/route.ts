@@ -114,3 +114,23 @@ export async function DELETE(req: NextRequest) {
         }, {status: 404})
     }
 }
+
+
+//Get vote count
+export async function GET(req: NextRequest) {
+    try {
+        const {searchParams} = new URL(req.url);
+        const postId = searchParams.get("postId");
+
+        if(!postId) {
+            return NextResponse.json({ error: "Post ID required" }, { status: 400 });
+        }
+
+        const upvotes = await Vote.countDocuments({ postId, voteType: "upvote"});
+        const downvotes = await Vote.countDocuments({ postId, voteType: "downvote"});
+        return NextResponse.json({ upvotes, downvotes }, { status: 200 });
+
+    } catch(error: unknown){
+        return NextResponse.json({ error: "Server error", details: error }, { status: 500 });
+    }
+}
