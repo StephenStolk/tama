@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import Image from "next/image";
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -55,7 +55,7 @@ const ImagePostCard: React.FC<ImagePostProps> = ({ post }) => {
 
     if (typeof post.tags === "string") {
       // Handle string cases like '#["Technology","Marvel"]'
-      let cleanedTags = post.tags
+      const cleanedTags = post.tags
         .replace(/^#\[/, "") // Remove leading #[
         .replace(/\]$/, "") // Remove trailing ]
         .replace(/['"]/g, ""); // Remove quotes
@@ -68,11 +68,8 @@ const ImagePostCard: React.FC<ImagePostProps> = ({ post }) => {
     return []; // Default to empty array if neither array nor string
   })();
 
-  useEffect(() => {
-    if (commentsOpen) fetchComments();
-  }, [commentsOpen]);
 
-  const fetchComments = async () => {
+  const fetchComments = useCallback(async () => {
     try {
       const res = await fetch(`/api/posts/comments?postId=${post._id}`);
       const data = await res.json();
@@ -81,7 +78,11 @@ const ImagePostCard: React.FC<ImagePostProps> = ({ post }) => {
       console.error("Failed to fetch comments:", error);
       setComments([]);
     }
-  };
+  }, [post._id]);
+
+  useEffect(() => {
+    if (commentsOpen) fetchComments();
+  }, [commentsOpen, fetchComments]);
 
   const handleVote = async (newVoteType: "upvote" | "downvote") => {
     try {
@@ -146,7 +147,7 @@ const ImagePostCard: React.FC<ImagePostProps> = ({ post }) => {
 
         {parsedTags.length > 0 && (
           <div className="flex flex-wrap gap-2 mb-4">
-            {parsedTags.map((tag, index) => (
+            {parsedTags.map((tag: string, index: number) => (
               <span
                 key={index}
                 className="inline-block bg-gray-100 text-gray-800 text-sm font-medium px-2.5 py-0.5 rounded-full border border-gray-200"

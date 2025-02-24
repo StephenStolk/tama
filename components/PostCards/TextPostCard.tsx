@@ -1,6 +1,6 @@
 'use client';
 import Link from 'next/link';
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { Card, CardContent, CardHeader, CardFooter } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -56,25 +56,22 @@ const TextPostCard: React.FC<TextPostProps> = ({ post }) => {
     }
 
     if (typeof post.tags === "string") {
-      // Handle string cases like '#["Technology","Marvel"]'
-      let cleanedTags = post.tags
-        .replace(/^#\[/, "") // Remove leading #[
-        .replace(/\]$/, "") // Remove trailing ]
-        .replace(/['"]/g, ""); // Remove quotes
+      
+      const cleanedTags = post.tags
+        .replace(/^#\[/, "") 
+        .replace(/\]$/, "") 
+        .replace(/['"]/g, ""); 
 
       const tagsArray = cleanedTags.split(",").map((tag) => tag.trim());
-      // console.log("Parsed tags:", tagsArray); // Debug: Check the parsed result
+     
       return tagsArray;
     }
 
-    return []; // Default to empty array if neither array nor string
+    return []; 
   })();
 
-  useEffect(() => {
-    if (commentsOpen) fetchComments();
-  }, [commentsOpen]);
 
-  const fetchComments = async () => {
+  const fetchComments = useCallback(async () => {
     try {
       const res = await fetch(`/api/posts/comments?postId=${post._id}`);
       const data = await res.json();
@@ -82,7 +79,11 @@ const TextPostCard: React.FC<TextPostProps> = ({ post }) => {
     } catch (error) {
       console.error("Failed to fetch comments:", error);
     }
-  };
+  }, [post._id]);
+
+  useEffect(() => {
+    if (commentsOpen) fetchComments();
+  }, [commentsOpen, fetchComments]);
 
   const handleVote = async (newVoteType: "upvote" | "downvote") => {
     try {
@@ -160,7 +161,7 @@ const TextPostCard: React.FC<TextPostProps> = ({ post }) => {
 
         {parsedTags.length > 0 && (
           <div className="flex flex-wrap gap-2 mb-4">
-            {parsedTags.map((tag, index) => (
+            {parsedTags.map((tag: string, index: number) => (
               <span
                 key={index}
                 className="inline-block bg-gray-100 text-gray-800 text-sm font-medium px-2.5 py-0.5 rounded-full border border-gray-200"

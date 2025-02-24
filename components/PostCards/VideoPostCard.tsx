@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import {
   Card,
   CardContent,
@@ -21,7 +21,7 @@ interface VideoPostProps {
     videoUrl: string;
     author: string;
     slug: string;
-    tags: string[] | string; // Allow tags to be either an array or a string
+    tags: string[] | string; 
     createdAt: string;
   };
 }
@@ -41,45 +41,36 @@ const VideoPostCard: React.FC<VideoPostProps> = ({ post }) => {
 
   // Enhanced parsing logic for tags
   const parsedTags = (() => {
-    // console.log("Raw post.tags:", post.tags); // Debug: Check the raw input
-
     if (Array.isArray(post.tags)) {
-      // If it's an array with a single string element like ["\"Technology\",\"Marvel\""]
+
       if (post.tags.length === 1 && typeof post.tags[0] === "string") {
         try {
-          // Parse the JSON string after removing escape characters
           const tagString = post.tags[0].replace(/\\/g, ""); // Remove backslashes
-          const tagsArray = JSON.parse(tagString); // Parse into array
-          // console.log("Parsed tags:", tagsArray); // Debug: Check the parsed result
+          const tagsArray = JSON.parse(tagString); 
           return tagsArray;
         } catch (error) {
           console.error("Error parsing tags:", error);
           return [];
         }
       }
-      return post.tags; // If already a proper array, use it directly
+      return post.tags; 
     }
 
     if (typeof post.tags === "string") {
       // Handle string cases like '#["Technology","Marvel"]'
-      let cleanedTags = post.tags
-        .replace(/^#\[/, "") // Remove leading #[
-        .replace(/\]$/, "") // Remove trailing ]
-        .replace(/['"]/g, ""); // Remove quotes
+      const cleanedTags = post.tags
+        .replace(/^#\[/, "") 
+        .replace(/\]$/, "") 
+        .replace(/['"]/g, "");
 
       const tagsArray = cleanedTags.split(",").map((tag) => tag.trim());
-      // console.log("Parsed tags:", tagsArray); // Debug: Check the parsed result
       return tagsArray;
     }
 
-    return []; // Default to empty array if neither array nor string
+    return []; 
   })();
 
-  useEffect(() => {
-    if (commentsOpen) fetchComments();
-  }, [commentsOpen]);
-
-  const fetchComments = async () => {
+  const fetchComments = useCallback(async () => {
     try {
       const res = await fetch(`/api/posts/comments?postId=${post._id}`);
       const data = await res.json();
@@ -87,7 +78,11 @@ const VideoPostCard: React.FC<VideoPostProps> = ({ post }) => {
     } catch (error) {
       console.error("Failed to fetch comments:", error);
     }
-  };
+  }, [post._id]);
+
+  useEffect(() => {
+    if (commentsOpen) fetchComments();
+  }, [commentsOpen, fetchComments]);
 
   const handleVote = async (newVoteType: "upvote" | "downvote") => {
     try {
@@ -170,7 +165,7 @@ const VideoPostCard: React.FC<VideoPostProps> = ({ post }) => {
 
         {parsedTags.length > 0 && (
           <div className="flex flex-wrap gap-2 mb-4">
-            {parsedTags.map((tag, index) => (
+            {parsedTags.map((tag: string, index: number) => (
               <span
                 key={index}
                 className="inline-block bg-gray-100 text-gray-800 text-xs md:text-sm font-medium px-2.5 py-0.5 rounded-full border border-gray-200"
