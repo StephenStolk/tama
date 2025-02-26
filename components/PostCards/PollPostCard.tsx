@@ -1,9 +1,15 @@
-import React, { useState, useEffect } from "react";
-import { Card, CardContent, CardHeader, CardFooter } from "@/components/ui/card";
+import React, { useState, useEffect, useCallback } from "react";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardFooter,
+} from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ArrowBigUp, ArrowBigDown, Share, MessageSquare } from "lucide-react";
+import { useRouter } from "next/navigation";
 
 interface PollOption {
   option: string
@@ -34,59 +40,98 @@ const PollPostCard: React.FC<PollPostProps> = ({ post }) => {
   const [commentsOpen, setCommentsOpen] = useState(false);
   const [comments, setComments] = useState<Comment[]>([]);
   const [newComment, setNewComment] = useState("");
+  const [upvotes, setUpvotes] = useState<number>(0);
+  const [downvotes, setDownvotes] = useState<number>(0);
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
+  const router = useRouter();
 
-  // Enhanced parsing logic for tags
+  const checkAuth = useCallback(async () => {
+    try {
+      const response = await fetch("/api/auth/status", {
+        credentials: "include",
+      });
+      const data = await response.json();
+      setIsAuthenticated(data.isAuthenticated || false);
+      return data.isAuthenticated || false;
+    } catch (error: unknown) {
+      console.log(error);
+      setIsAuthenticated(false);
+      return false;
+    }
+  }, []);
+
+  const fetchVotes = useCallback(async () => {
+    try {
+      const result = await fetch(`/api/posts/votes?postId=${post._id}`);
+      const data = await result.json();
+
+      if (result.ok) {
+        setUpvotes(data.upvotes || 0);
+        setDownvotes(data.downvotes || 0);
+      }
+    } catch (error: unknown) {
+      console.error("Failed to fetch votes:", error);
+    }
+  }, [post._id]);
+
   const parsedTags = (() => {
-    // console.log("Raw post.tags:", post.tags); // Debug: Check the raw input
-
     if (Array.isArray(post.tags)) {
-      // If it's an array with a single string element like ["\"Technology\",\"Marvel\""]
       if (post.tags.length === 1 && typeof post.tags[0] === "string") {
         try {
-          // Parse the JSON string after removing escape characters
           const tagString = post.tags[0].replace(/\\/g, ""); // Remove backslashes
-          const tagsArray = JSON.parse(tagString); // Parse into array
-          // console.log("Parsed tags:", tagsArray); // Debug: Check the parsed result
+          const tagsArray = JSON.parse(tagString);
           return tagsArray;
         } catch (error) {
           console.error("Error parsing tags:", error);
           return [];
         }
       }
-      return post.tags; // If already a proper array, use it directly
+      return post.tags;
     }
 
     if (typeof post.tags === "string") {
-      // Handle string cases like '#["Technology","Marvel"]'
-      let cleanedTags = post.tags
-        .replace(/^#\[/, "") // Remove leading #[
-        .replace(/\]$/, "") // Remove trailing ]
-        .replace(/['"]/g, ""); // Remove quotes
+      const cleanedTags = post.tags
+        .replace(/^#\[/, "")
+        .replace(/\]$/, "")
+        .replace(/['"]/g, "");
 
       const tagsArray = cleanedTags.split(",").map((tag) => tag.trim());
-      // console.log("Parsed tags:", tagsArray); // Debug: Check the parsed result
       return tagsArray;
     }
 
-    return []; // Default to empty array if neither array nor string
+    return [];
   })();
 
-  useEffect(() => {
-    if (commentsOpen) fetchComments();
-  }, [commentsOpen]);
-
-  const fetchComments = async () => {
+  const fetchComments = useCallback(async () => {
     try {
       const res = await fetch(`/api/posts/comments?postId=${post._id}`);
       const data = await res.json();
       setComments(Array.isArray(data.comments) ? data.comments : []);
     } catch (error) {
       console.error("Failed to fetch comments:", error);
-      setComments([]); // Set to empty array on error
+      setComments([]);
     }
-  };
+  }, [post._id]);
+
+  useEffect(() => {
+    if (commentsOpen) fetchComments();
+  }, [commentsOpen, fetchComments]);
+
+  useEffect(() => {
+    fetchVotes();
+  }, [fetchVotes]);
+
+  useEffect(() => {
+    checkAuth();
+  }, [checkAuth]);
 
   const handleVote = async (newVoteType: "upvote" | "downvote") => {
+    const authCheck = await checkAuth();
+    if (!authCheck) {
+      router.push("/login");
+      return;
+    }
+
     try {
       if (voteType === newVoteType) {
         await fetch(`/api/posts/votes?postId=${post._id}`, {
@@ -94,14 +139,31 @@ const PollPostCard: React.FC<PollPostProps> = ({ post }) => {
           credentials: "include",
         });
         setVoteType(null);
+
+        if (newVoteType === "upvote") setUpvotes((prev: number) => prev - 1);
+        else setDownvotes((prev: number) => prev - 1);
       } else {
         await fetch("/api/posts/votes", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           credentials: "include",
-          body: JSON.stringify({ postId: post._id, voteType: newVoteType, type: "post" }),
+          body: JSON.stringify({
+            postId: post._id,
+            voteType: newVoteType,
+            type: "post",
+          }),
         });
         setVoteType(newVoteType);
+
+        if (newVoteType === "upvote") {
+          setUpvotes((prev: number) => prev + 1);
+          if (voteType === "downvote") setDownvotes((prev) => prev - 1);
+        } else {
+          setDownvotes((prev) => prev + 1);
+          if (voteType === "upvote") {
+            setUpvotes((prev) => prev - 1);
+          }
+        }
       }
     } catch (error) {
       console.error("Error handling vote:", error);
@@ -109,6 +171,12 @@ const PollPostCard: React.FC<PollPostProps> = ({ post }) => {
   };
 
   const handleCommentSubmit = async () => {
+    const authCheck = await checkAuth();
+    if (!authCheck) {
+      router.push("/login");
+      return;
+    }
+
     if (!newComment.trim()) return;
 
     try {
@@ -137,15 +205,22 @@ const PollPostCard: React.FC<PollPostProps> = ({ post }) => {
         </Avatar>
         <div className="flex flex-col">
           <p className="text-sm font-medium text-gray-900">{post.author}</p>
-          <p className="text-xs text-gray-500">{new Date(post.createdAt).toLocaleDateString()}</p>
+          <p className="text-xs text-gray-500">
+            {new Date(post.createdAt).toLocaleDateString()}
+          </p>
         </div>
       </CardHeader>
 
       <CardContent className="p-4">
-        <h2 className="text-lg font-semibold text-gray-900 mb-2">{post.title}</h2>
+        <h2 className="text-lg font-semibold text-gray-900 mb-2">
+          {post.title}
+        </h2>
         <div className="mt-4 space-y-2">
           {post.pollOptions.map((option, index) => (
-            <div key={index} className="flex justify-between items-center border p-2 rounded-md">
+            <div
+              key={index}
+              className="flex justify-between items-center border p-2 rounded-md"
+            >
               <span>{option.option}</span>
               <span>{option.votes} votes</span>
             </div>
@@ -154,7 +229,7 @@ const PollPostCard: React.FC<PollPostProps> = ({ post }) => {
 
         {parsedTags.length > 0 && (
           <div className="mt-3 flex flex-wrap gap-2 mb-4">
-            {parsedTags.map((tag, index) => (
+            {parsedTags.map((tag: string, index: number) => (
               <span
                 key={index}
                 className="inline-block bg-gray-100 text-gray-800 text-sm font-medium px-2.5 py-0.5 rounded-full border border-gray-200"
@@ -167,13 +242,14 @@ const PollPostCard: React.FC<PollPostProps> = ({ post }) => {
       </CardContent>
 
       <CardFooter className="flex justify-between items-center p-4 border-t border-gray-100">
-        <div className="flex gap-2">
+        <div className="flex gap-2 mb-2 sm:mb-0">
           <Button
             variant={voteType === "upvote" ? "default" : "ghost"}
             size="icon"
             onClick={() => handleVote("upvote")}
           >
             <ArrowBigUp className="h-5 w-5" />
+            <span className="ml-1 text-sm">{upvotes}</span>
           </Button>
           <Button
             variant={voteType === "downvote" ? "default" : "ghost"}
@@ -181,6 +257,7 @@ const PollPostCard: React.FC<PollPostProps> = ({ post }) => {
             onClick={() => handleVote("downvote")}
           >
             <ArrowBigDown className="h-5 w-5" />
+            <span className="ml-1 text-sm">{downvotes}</span>
           </Button>
         </div>
         <div className="flex gap-3">
@@ -191,7 +268,10 @@ const PollPostCard: React.FC<PollPostProps> = ({ post }) => {
           >
             <MessageSquare className="h-5 w-5" /> Comments
           </Button>
-          <Button variant="ghost" className="flex items-center gap-1 text-gray-600 hover:text-gray-900">
+          <Button
+            variant="ghost"
+            className="flex items-center gap-1 text-gray-600 hover:text-gray-900"
+          >
             <Share className="h-5 w-5" /> Share
           </Button>
         </div>
@@ -216,9 +296,13 @@ const PollPostCard: React.FC<PollPostProps> = ({ post }) => {
             {comments.length > 0 ? (
               comments.map((comment) => (
                 <div key={comment._id} className="p-2 border rounded-lg">
-                  <p className="text-sm font-semibold">{comment.author.username}</p>
+                  <p className="text-sm font-semibold">
+                    {comment.author.username}
+                  </p>
                   <p className="text-sm">{comment.content}</p>
-                  <p className="text-xs text-muted-foreground">{new Date(comment.createdAt).toLocaleString()}</p>
+                  <p className="text-xs text-muted-foreground">
+                    {new Date(comment.createdAt).toLocaleString()}
+                  </p>
                 </div>
               ))
             ) : (

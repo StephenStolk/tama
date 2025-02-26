@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import {
   Card,
   CardContent,
@@ -12,6 +12,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ArrowBigUp, ArrowBigDown, Share, MessageSquare } from "lucide-react";
+import { useRouter } from "next/navigation";
 import Image from "next/image";
 
 interface VideoPostProps {
@@ -21,7 +22,7 @@ interface VideoPostProps {
     videoUrl: string;
     author: string;
     slug: string;
-    tags: string[] | string; // Allow tags to be either an array or a string
+    tags: string[] | string; 
     createdAt: string;
   };
 }
@@ -38,48 +39,71 @@ const VideoPostCard: React.FC<VideoPostProps> = ({ post }) => {
   const [commentsOpen, setCommentsOpen] = useState(false);
   const [comments, setComments] = useState<Comment[]>([]);
   const [newComment, setNewComment] = useState("");
+  const [upvotes, setUpvotes] = useState<number>(0);
+  const [downvotes, setDownvotes] = useState<number>(0);
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
+  const router = useRouter();
+
+  const checkAuth = useCallback(async () => {
+      try {
+        const response = await fetch("/api/auth/status", {
+          credentials: "include",
+        });
+        const data = await response.json();
+        setIsAuthenticated(data.isAuthenticated || false);
+        return data.isAuthenticated || false;
+      } catch (error: unknown) {
+        console.log(error);
+        setIsAuthenticated(false);
+        return false;
+      }
+    }, []);
+
+  const fetchVotes = useCallback(async () => {
+    try {
+        const result = await fetch(`/api/posts/votes?postId=${post._id}`);
+        const data = await result.json();
+
+        if(result.ok) {
+            setUpvotes(data.upvotes || 0);
+            setDownvotes(data.downvotes || 0);
+        }
+    } catch (error: unknown) {
+        console.error("Failed to fetch votes:", error);
+    }
+  }, [post._id])
 
   // Enhanced parsing logic for tags
   const parsedTags = (() => {
-    // console.log("Raw post.tags:", post.tags); // Debug: Check the raw input
-
     if (Array.isArray(post.tags)) {
-      // If it's an array with a single string element like ["\"Technology\",\"Marvel\""]
+
       if (post.tags.length === 1 && typeof post.tags[0] === "string") {
         try {
-          // Parse the JSON string after removing escape characters
           const tagString = post.tags[0].replace(/\\/g, ""); // Remove backslashes
-          const tagsArray = JSON.parse(tagString); // Parse into array
-          // console.log("Parsed tags:", tagsArray); // Debug: Check the parsed result
+          const tagsArray = JSON.parse(tagString); 
           return tagsArray;
         } catch (error) {
           console.error("Error parsing tags:", error);
           return [];
         }
       }
-      return post.tags; // If already a proper array, use it directly
+      return post.tags; 
     }
 
     if (typeof post.tags === "string") {
-      // Handle string cases like '#["Technology","Marvel"]'
-      let cleanedTags = post.tags
-        .replace(/^#\[/, "") // Remove leading #[
-        .replace(/\]$/, "") // Remove trailing ]
-        .replace(/['"]/g, ""); // Remove quotes
+      const cleanedTags = post.tags
+        .replace(/^#\[/, "") 
+        .replace(/\]$/, "") 
+        .replace(/['"]/g, "");
 
       const tagsArray = cleanedTags.split(",").map((tag) => tag.trim());
-      // console.log("Parsed tags:", tagsArray); // Debug: Check the parsed result
       return tagsArray;
     }
 
-    return []; // Default to empty array if neither array nor string
+    return []; 
   })();
 
-  useEffect(() => {
-    if (commentsOpen) fetchComments();
-  }, [commentsOpen]);
-
-  const fetchComments = async () => {
+  const fetchComments = useCallback(async () => {
     try {
       const res = await fetch(`/api/posts/comments?postId=${post._id}`);
       const data = await res.json();
@@ -87,9 +111,30 @@ const VideoPostCard: React.FC<VideoPostProps> = ({ post }) => {
     } catch (error) {
       console.error("Failed to fetch comments:", error);
     }
-  };
+  }, [post._id]);
+
+
+
+  useEffect(() => {
+    if (commentsOpen) fetchComments();
+  }, [commentsOpen, fetchComments]);
+
+  useEffect(() => {
+    fetchVotes();
+  }, [fetchVotes]);
+
+  useEffect(() => {
+    checkAuth();
+  }, [checkAuth]);
+
 
   const handleVote = async (newVoteType: "upvote" | "downvote") => {
+    const authCheck = await checkAuth();
+    if (!authCheck) {
+      router.push("/login");
+      return;
+    }
+
     try {
       if (voteType === newVoteType) {
         await fetch(`/api/posts/votes?postId=${post._id}`, {
@@ -97,6 +142,10 @@ const VideoPostCard: React.FC<VideoPostProps> = ({ post }) => {
           credentials: "include",
         });
         setVoteType(null);
+
+        if(newVoteType === "upvote") setUpvotes((prev: number) => prev - 1);
+        else setDownvotes((prev: number) => prev - 1);
+
       } else {
         await fetch("/api/posts/votes", {
           method: "POST",
@@ -109,6 +158,16 @@ const VideoPostCard: React.FC<VideoPostProps> = ({ post }) => {
           }),
         });
         setVoteType(newVoteType);
+
+        if(newVoteType === "upvote"){
+            setUpvotes((prev: number) => prev + 1);
+            if( voteType === "downvote") setDownvotes((prev) => prev - 1);
+        } else {
+            setDownvotes((prev) => prev + 1);
+            if(voteType === "upvote") {
+                setUpvotes((prev) => prev - 1);
+            }
+        }
       }
     } catch (error) {
       alert(error);
@@ -117,7 +176,13 @@ const VideoPostCard: React.FC<VideoPostProps> = ({ post }) => {
   };
 
   const handleCommentSubmit = async () => {
+    const authCheck = await checkAuth();
+    if (!authCheck) {
+      router.push("/login");
+      return;
+    }
     if (!newComment.trim()) return;
+   
 
     try {
       const res = await fetch("/api/posts/comments", {
@@ -170,7 +235,7 @@ const VideoPostCard: React.FC<VideoPostProps> = ({ post }) => {
 
         {parsedTags.length > 0 && (
           <div className="flex flex-wrap gap-2 mb-4">
-            {parsedTags.map((tag, index) => (
+            {parsedTags.map((tag: string, index: number) => (
               <span
                 key={index}
                 className="inline-block bg-gray-100 text-gray-800 text-xs md:text-sm font-medium px-2.5 py-0.5 rounded-full border border-gray-200"
@@ -183,22 +248,25 @@ const VideoPostCard: React.FC<VideoPostProps> = ({ post }) => {
       </CardContent>
 
       <CardFooter className="flex flex-wrap justify-between items-center p-4 border-t border-gray-100">
-        <div className="flex gap-2 mb-2 sm:mb-0">
-          <Button
-            variant={voteType === "upvote" ? "default" : "ghost"}
-            size="icon"
-            onClick={() => handleVote("upvote")}
-          >
-            <ArrowBigUp className="h-5 w-5" />
-          </Button>
-          <Button
-            variant={voteType === "downvote" ? "default" : "ghost"}
-            size="icon"
-            onClick={() => handleVote("downvote")}
-          >
-            <ArrowBigDown className="h-5 w-5" />
-          </Button>
-        </div>
+      <div className="flex gap-2 mb-2 sm:mb-0">
+  <Button
+    variant={voteType === "upvote" ? "default" : "ghost"}
+    size="icon"
+    onClick={() => handleVote("upvote")}
+  >
+    <ArrowBigUp className="h-5 w-5" />
+    <span className="ml-1 text-sm">{upvotes}</span>
+  </Button>
+  <Button
+    variant={voteType === "downvote" ? "default" : "ghost"}
+    size="icon"
+    onClick={() => handleVote("downvote")}
+  >
+    <ArrowBigDown className="h-5 w-5" />
+    <span className="ml-1 text-sm">{downvotes}</span>
+  </Button>
+</div>
+
         <div className="flex gap-3">
           <Button
             variant="ghost"

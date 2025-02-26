@@ -1,11 +1,17 @@
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import Image from "next/image";
-import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardFooter,
+  CardHeader,
+} from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ArrowBigUp, ArrowBigDown, MessageSquare, Share } from "lucide-react";
 import { Input } from "../ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 interface ImagePostProps {
   post: {
@@ -31,31 +37,57 @@ const ImagePostCard: React.FC<ImagePostProps> = ({ post }) => {
   const [commentsOpen, setCommentsOpen] = useState(false);
   const [comments, setComments] = useState<Comment[]>([]);
   const [newComment, setNewComment] = useState("");
+  const [upvotes, setUpvotes] = useState<number>(0);
+  const [downvotes, setDownvotes] = useState<number>(0);
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
+  const router = useRouter();
 
-  // Enhanced parsing logic for tags
+  const checkAuth = useCallback(async () => {
+    try {
+      const response = await fetch("/api/auth/status", {
+        credentials: "include",
+      });
+      const data = await response.json();
+      setIsAuthenticated(data.isAuthenticated || false);
+      return data.isAuthenticated || false;
+    } catch (error: unknown) {
+      console.log(error);
+      setIsAuthenticated(false);
+      return false;
+    }
+  }, []);
+
+  const fetchVotes = useCallback(async () => {
+    try {
+      const result = await fetch(`/api/posts/votes?postId=${post._id}`);
+      const data = await result.json();
+
+      if (result.ok) {
+        setUpvotes(data.upvotes || 0);
+        setDownvotes(data.downvotes || 0);
+      }
+    } catch (error: unknown) {
+      console.error("Failed to fetch votes:", error);
+    }
+  }, [post._id]);
+
   const parsedTags = (() => {
-    // console.log("Raw post.tags:", post.tags); // Debug: Check the raw input
-
     if (Array.isArray(post.tags)) {
-      // If it's an array with a single string element like ["\"Technology\",\"Marvel\""]
       if (post.tags.length === 1 && typeof post.tags[0] === "string") {
         try {
-          // Parse the JSON string after removing escape characters
           const tagString = post.tags[0].replace(/\\/g, ""); // Remove backslashes
-          const tagsArray = JSON.parse(tagString); // Parse into array
-          // console.log("Parsed tags:", tagsArray); // Debug: Check the parsed result
+          const tagsArray = JSON.parse(tagString);
           return tagsArray;
         } catch (error) {
           console.error("Error parsing tags:", error);
           return [];
         }
       }
-      return post.tags; // If already a proper array, use it directly
+      return post.tags;
     }
 
     if (typeof post.tags === "string") {
-      // Handle string cases like '#["Technology","Marvel"]'
-      let cleanedTags = post.tags
+      const cleanedTags = post.tags
         .replace(/^#\[/, "") // Remove leading #[
         .replace(/\]$/, "") // Remove trailing ]
         .replace(/['"]/g, ""); // Remove quotes
@@ -68,11 +100,7 @@ const ImagePostCard: React.FC<ImagePostProps> = ({ post }) => {
     return []; // Default to empty array if neither array nor string
   })();
 
-  useEffect(() => {
-    if (commentsOpen) fetchComments();
-  }, [commentsOpen]);
-
-  const fetchComments = async () => {
+  const fetchComments = useCallback(async () => {
     try {
       const res = await fetch(`/api/posts/comments?postId=${post._id}`);
       const data = await res.json();
@@ -81,9 +109,27 @@ const ImagePostCard: React.FC<ImagePostProps> = ({ post }) => {
       console.error("Failed to fetch comments:", error);
       setComments([]);
     }
-  };
+  }, [post._id]);
+
+  useEffect(() => {
+    if (commentsOpen) fetchComments();
+  }, [commentsOpen, fetchComments]);
+
+  useEffect(() => {
+    fetchVotes();
+  }, [fetchVotes]);
+
+  useEffect(() => {
+    checkAuth();
+  }, [checkAuth]);
 
   const handleVote = async (newVoteType: "upvote" | "downvote") => {
+    const authCheck = await checkAuth();
+    if (!authCheck) {
+      router.push("/login");
+      return;
+    }
+
     try {
       if (voteType === newVoteType) {
         await fetch(`/api/posts/votes?postId=${post._id}`, {
@@ -91,14 +137,31 @@ const ImagePostCard: React.FC<ImagePostProps> = ({ post }) => {
           credentials: "include",
         });
         setVoteType(null);
+
+        if (newVoteType === "upvote") setUpvotes((prev: number) => prev - 1);
+        else setDownvotes((prev: number) => prev - 1);
       } else {
         await fetch("/api/posts/votes", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           credentials: "include",
-          body: JSON.stringify({ postId: post._id, voteType: newVoteType, type: "image" }),
+          body: JSON.stringify({
+            postId: post._id,
+            voteType: newVoteType,
+            type: "image",
+          }),
         });
         setVoteType(newVoteType);
+
+        if (newVoteType === "upvote") {
+          setUpvotes((prev: number) => prev + 1);
+          if (voteType === "downvote") setDownvotes((prev) => prev - 1);
+        } else {
+          setDownvotes((prev) => prev + 1);
+          if (voteType === "upvote") {
+            setUpvotes((prev) => prev - 1);
+          }
+        }
       }
     } catch (error) {
       alert("An error occurred while processing your vote.");
@@ -107,6 +170,12 @@ const ImagePostCard: React.FC<ImagePostProps> = ({ post }) => {
   };
 
   const handleCommentSubmit = async () => {
+    const authCheck = await checkAuth();
+    if (!authCheck) {
+      router.push("/login");
+      return;
+    }
+
     if (!newComment.trim()) return;
 
     try {
@@ -135,18 +204,22 @@ const ImagePostCard: React.FC<ImagePostProps> = ({ post }) => {
         </Avatar>
         <div className="flex flex-col">
           <p className="text-sm font-medium text-gray-900">{post.author}</p>
-          <p className="text-xs text-gray-500">{new Date(post.createdAt).toLocaleDateString()}</p>
+          <p className="text-xs text-gray-500">
+            {new Date(post.createdAt).toLocaleDateString()}
+          </p>
         </div>
       </CardHeader>
 
       <CardContent className="p-4">
         <Link href={`/post/${post._id}`} passHref>
-          <h2 className="text-lg font-semibold text-gray-900 mb-2 cursor-pointer">{post.title}</h2>
+          <h2 className="text-lg font-semibold text-gray-900 mb-2 cursor-pointer">
+            {post.title}
+          </h2>
         </Link>
 
         {parsedTags.length > 0 && (
           <div className="flex flex-wrap gap-2 mb-4">
-            {parsedTags.map((tag, index) => (
+            {parsedTags.map((tag: string, index: number) => (
               <span
                 key={index}
                 className="inline-block bg-gray-100 text-gray-800 text-sm font-medium px-2.5 py-0.5 rounded-full border border-gray-200"
@@ -177,6 +250,7 @@ const ImagePostCard: React.FC<ImagePostProps> = ({ post }) => {
             onClick={() => handleVote("upvote")}
           >
             <ArrowBigUp className="h-5 w-5" />
+            <span className="ml-1 text-sm">{upvotes}</span>
           </Button>
           <Button
             variant={voteType === "downvote" ? "default" : "ghost"}
@@ -184,6 +258,7 @@ const ImagePostCard: React.FC<ImagePostProps> = ({ post }) => {
             onClick={() => handleVote("downvote")}
           >
             <ArrowBigDown className="h-5 w-5" />
+            <span className="ml-1 text-sm">{downvotes}</span>
           </Button>
         </div>
         <div className="flex gap-3">
@@ -194,7 +269,10 @@ const ImagePostCard: React.FC<ImagePostProps> = ({ post }) => {
           >
             <MessageSquare className="h-5 w-5" /> Comments
           </Button>
-          <Button variant="ghost" className="flex items-center gap-1 text-gray-600 hover:text-gray-900">
+          <Button
+            variant="ghost"
+            className="flex items-center gap-1 text-gray-600 hover:text-gray-900"
+          >
             <Share className="h-5 w-5" /> Share
           </Button>
         </div>
@@ -219,7 +297,9 @@ const ImagePostCard: React.FC<ImagePostProps> = ({ post }) => {
             {comments.length > 0 ? (
               comments.map((comment) => (
                 <div key={comment._id} className="p-2 border rounded-lg">
-                  <p className="text-sm font-semibold">{comment.author.username}</p>
+                  <p className="text-sm font-semibold">
+                    {comment.author.username}
+                  </p>
                   <p className="text-sm">{comment.content}</p>
                   <p className="text-xs text-muted-foreground">
                     {new Date(comment.createdAt).toLocaleString()}

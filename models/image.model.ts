@@ -21,7 +21,7 @@ const ImageSchema = new Schema<IImage>(
     },
     imageUrl: { type: String, required: true },
     author: { type: Schema.Types.ObjectId, ref: "User", required: true },
-    slug: { type: String, required: true, unique: true },
+    slug: { type: String, required: true, unique: true, index: true },
     tags: {
       type: [String],
       default: [],

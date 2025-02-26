@@ -14,4 +14,9 @@ const VoteSchema = new Schema<IVote>({
     createdAt: { type: Date, default: Date.now },
 })
 
+// Indexing for optimized queries
+VoteSchema.index({ postId: 1, author: 1 }, { unique: true }); // Prevent duplicate votes
+VoteSchema.index({ createdAt: -1 }); // Speed up fetching latest votes
+VoteSchema.index({ postId: 1, voteType: 1 }); // Optimize vote aggregation
+
 export const Vote = mongoose.model<IVote>("Vote", VoteSchema);
