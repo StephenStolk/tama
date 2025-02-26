@@ -1,11 +1,11 @@
-import mongoose, {Schema, Document} from "mongoose";
+import mongoose, { Schema, Document } from "mongoose";
 
 interface IPoll extends Document {
     title: string;
     type: "poll";
     pollOptions?: {
-        option: string,
-        votes: number
+        option: string;
+        votes: number;
     }[];
     author: mongoose.Schema.Types.ObjectId | unknown;
     slug: string;
@@ -17,36 +17,32 @@ interface IPoll extends Document {
 const PollSchema = new Schema<IPoll>(
     {
         title: { type: String, required: true },
-    type: {
-        type: String,
-        default: "poll",
-        required: true
+        type: {
+            type: String,
+            default: "poll",
+            required: true
+        },
+        pollOptions: [
+            {
+                option: { type: String },
+                votes: { type: Number, default: 0 },
+            },
+        ],
+        author: { type: Schema.Types.ObjectId, ref: "User", required: true },
+        slug: { type: String, required: true, unique: true },
+        tags: {
+            type: [String],
+            default: [],
+            validate: {
+                validator: (tags: string[]) => tags.length <= 2,
+                message: "You can select up to 2 tags only.",
+            },
+        },
     },
-    pollOptions: [
-      {
-        option: { type: String },
-        votes: { type: Number, default: 0 },
-      },
-    ],
-    author: { type: Schema.Types.ObjectId, ref: "User", required: true },
-    slug: { type: String, required: true, unique: true },
-    tags: {
-      type: [String],
-      default: [],
-      validate: {
-          validator: (tags: string[]) => tags.length <=2,
-          message: "You can select upto 2 tags only.",
-      },
-  },
-  },
-  { timestamps: true }
-)
+    { timestamps: true }
+);
 
-PollSchema.index({ createdAt: -1 }); 
-PollSchema.index({ tags: 1 }); 
-PollSchema.index({ slug: 1 }); 
-PollSchema.index({ author: 1 }); 
-
-
+// Use `mongoose.models` to check if the model already exists
 const Poll = mongoose.models.Poll || mongoose.model<IPoll>("Poll", PollSchema);
+
 export default Poll;
