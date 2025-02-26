@@ -5,16 +5,21 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ArrowBigUp, ArrowBigDown, Share, MessageSquare } from "lucide-react";
 
+interface PollOption {
+  option: string
+  votes: number
+}
+
 interface PollPostProps {
   post: {
-    _id: string;
-    title: string;
-    pollOptions: { option: string; votes: number }[];
-    author: string;
-    slug: string;
-    tags: string[] | string; // Allow tags to be either an array or a string
-    createdAt: string;
-  };
+    _id: string
+    title: string
+    pollOptions: PollOption[]
+    author: string
+    slug: string
+    tags: string[]
+    createdAt: string
+  }
 }
 
 interface Comment {

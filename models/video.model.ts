@@ -27,11 +27,14 @@ const VideoSchema = new Schema<IVideo>(
       default: [],
       validate: {
         validator: (tags: string[]) => tags.length <= 2,
-        message: "You can select upto 2 tags only.",
+        message: "You can select up to 2 tags only.",
       },
     },
   },
   { timestamps: true }
 );
 
-export default mongoose.model<IVideo>("Video", VideoSchema);
+// Prevent overwriting the model if it already exists
+const Video = mongoose.models.Video || mongoose.model<IVideo>("Video", VideoSchema);
+
+export default Video;
