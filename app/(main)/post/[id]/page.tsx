@@ -1,83 +1,152 @@
-"use client"
+"use client";
 
-import { useEffect, useState } from "react"
-import { use } from "react" // Import React.use
-import { Card, CardContent, CardHeader, CardFooter } from "@/components/ui/card"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { ArrowBigUp, ArrowBigDown, Share, Copy, Link as LinkIcon } from "lucide-react"
-import Image from "next/image"
-import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from "@/components/ui/dropdown-menu"
+import React from "react";
+
+import { useEffect, useState } from "react";
+import { use } from "react"; // Import React.use
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardFooter,
+} from "@/components/ui/card";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { ArrowBigUp, ArrowBigDown, Share, Copy, LinkIcon } from "lucide-react";
+import Image from "next/image";
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+} from "@/components/ui/dropdown-menu";
 
 interface Post {
-  _id: string
-  title: string
-  content?: string
-  imageUrl?: string
-  videoUrl?: string
-  pollOptions?: Array<{ option: string; votes: number }>
-  author: string
-  type: "image" | "video" | "post" | "poll"
-  tags: string[]
-  createdAt: string
+  _id: string;
+  title: string;
+  content?: string;
+  imageUrl?: string;
+  videoUrl?: string;
+  pollOptions?: Array<{ option: string; votes: number }>;
+  author: string;
+  type: "image" | "video" | "post" | "poll";
+  tags: string[] | string;
+  createdAt: string;
 }
 
 interface Comment {
-  _id: string
-  author: { username: string }
-  content: string
-  createdAt: string
+  _id: string;
+  author: { username: string };
+  content: string;
+  createdAt: string;
 }
 
-export default function PostPage({ params }: { params: Promise<{ id: string }> }) {
-  const { id } = use(params)
-  const [post, setPost] = useState<Post | null>(null)
-  const [comments, setComments] = useState<Comment[]>([])
-  const [newComment, setNewComment] = useState("")
-  const [voteType, setVoteType] = useState<"upvote" | "downvote" | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-  const [copied, setCopied] = useState(false)
+export default function PostPage({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
+  const { id } = use(params);
+  const [post, setPost] = useState<Post | null>(null);
+  const [comments, setComments] = useState<Comment[]>([]);
+  const [newComment, setNewComment] = useState("");
+  const [voteType, setVoteType] = useState<"upvote" | "downvote" | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [copied, setCopied] = useState(false);
+  const [upvotes, setUpvotes] = useState<number>(0);
+  const [downvotes, setDownvotes] = useState<number>(0);
 
-  const defaultAvatar = "https://api.dicebear.com/7.x/avatars/svg"
+  const defaultAvatar = "https://api.dicebear.com/7.x/avatars/svg";
 
   useEffect(() => {
     const fetchPost = async () => {
-      if (!id) return
+      if (!id) return;
 
       try {
-        const res = await fetch(`/api/posts/${id}`)
-        if (!res.ok) throw new Error("Failed to fetch post")
-        const data = await res.json()
-        setPost(data)
+        const res = await fetch(`/api/posts/${id}`);
+        if (!res.ok) throw new Error("Failed to fetch post");
+        const data = await res.json();
+        setPost(data);
 
-        const commentsRes = await fetch(`/api/posts/comments?postId=${id}`)
+        const commentsRes = await fetch(`/api/posts/comments?postId=${id}`);
         if (commentsRes.ok) {
-          const commentsData = await commentsRes.json()
-          setComments(commentsData.comments || [])
+          const commentsData = await commentsRes.json();
+          setComments(commentsData.comments || []);
         }
       } catch (error) {
-        console.error("Error:", error)
-        setError("Failed to load post")
+        console.error("Error:", error);
+        setError("Failed to load post");
       } finally {
-        setLoading(false)
+        setLoading(false);
       }
+    };
+
+    fetchPost();
+  }, [id]);
+
+  useEffect(() => {
+    const fetchVotes = async () => {
+      if (!post) return;
+
+      try {
+        const result = await fetch(`/api/posts/votes?postId=${post._id}`);
+        const data = await result.json();
+
+        if (result.ok) {
+          setUpvotes(data.upvotes || 0);
+          setDownvotes(data.downvotes || 0);
+        }
+      } catch (error) {
+        console.error("Failed to fetch votes:", error);
+      }
+    };
+
+    fetchVotes();
+  }, [post]);
+
+  const parseTags = (tags: string[] | string) => {
+    if (Array.isArray(tags)) {
+      if (tags.length === 1 && typeof tags[0] === "string") {
+        try {
+          const tagString = tags[0].replace(/\\/g, ""); // Remove backslashes
+          const tagsArray = JSON.parse(tagString);
+          return tagsArray;
+        } catch (error) {
+          console.error("Error parsing tags:", error);
+          return [];
+        }
+      }
+      return tags;
     }
 
-    fetchPost()
-  }, [id])
+    if (typeof tags === "string") {
+      const cleanedTags = tags
+        .replace(/^#\[/, "") // Remove leading #[
+        .replace(/\]$/, "") // Remove trailing ]
+        .replace(/['"]/g, ""); // Remove quotes
+
+      const tagsArray = cleanedTags.split(",").map((tag) => tag.trim());
+      return tagsArray;
+    }
+
+    return [];
+  };
 
   const handleVote = async (newVoteType: "upvote" | "downvote") => {
-    if (!post) return
+    if (!post) return;
 
     try {
       if (voteType === newVoteType) {
         await fetch(`/api/posts/votes?postId=${post._id}`, {
           method: "DELETE",
           credentials: "include",
-        })
-        setVoteType(null)
+        });
+        setVoteType(null);
+
+        if (newVoteType === "upvote") setUpvotes((prev) => prev - 1);
+        else setDownvotes((prev) => prev - 1);
       } else {
         const res = await fetch("/api/posts/votes", {
           method: "POST",
@@ -88,23 +157,31 @@ export default function PostPage({ params }: { params: Promise<{ id: string }> }
             voteType: newVoteType,
             type: post.type,
           }),
-        })
+        });
 
         if (!res.ok) {
-          const data = await res.json()
-          throw new Error(data.message || "Failed to vote")
+          const data = await res.json();
+          throw new Error(data.message || "Failed to vote");
         }
 
-        setVoteType(newVoteType)
+        setVoteType(newVoteType);
+
+        if (newVoteType === "upvote") {
+          setUpvotes((prev) => prev + 1);
+          if (voteType === "downvote") setDownvotes((prev) => prev - 1);
+        } else {
+          setDownvotes((prev) => prev + 1);
+          if (voteType === "upvote") setUpvotes((prev) => prev - 1);
+        }
       }
     } catch (error) {
-      console.error("Error handling vote:", error)
-      alert("Failed to vote. Please try again.")
+      console.error("Error handling vote:", error);
+      alert("Failed to vote. Please try again.");
     }
-  }
+  };
 
   const handleCommentSubmit = async () => {
-    if (!newComment.trim() || !post) return
+    if (!newComment.trim() || !post) return;
 
     try {
       const res = await fetch("/api/posts/comments", {
@@ -115,63 +192,101 @@ export default function PostPage({ params }: { params: Promise<{ id: string }> }
           postId: post._id,
           content: newComment,
         }),
-      })
+      });
 
       if (!res.ok) {
-        throw new Error("Failed to post comment")
+        throw new Error("Failed to post comment");
       }
 
-      const data = await res.json()
-      setComments((prev) => [...prev, data.comment])
-      setNewComment("")
+      const data = await res.json();
+      setComments((prev) => [...prev, data.comment]);
+      setNewComment("");
     } catch (error) {
-      console.error("Error submitting comment:", error)
-      alert("Failed to post comment. Please try again.")
+      console.error("Error submitting comment:", error);
+      alert("Failed to post comment. Please try again.");
     }
-  }
+  };
 
   const handleShare = () => {
     if (navigator.share) {
-      navigator.share({
-        title: post?.title || "Check this out",
-        url: window.location.href,
-      }).catch((error) => console.error("Error sharing:", error))
+      navigator
+        .share({
+          title: post?.title || "Check this out",
+          url: window.location.href,
+        })
+        .catch((error) => console.error("Error sharing:", error));
     } else {
       alert("Sharing not supported in this browser.");
     }
-  }
+  };
 
   const handleCopy = () => {
     navigator.clipboard.writeText(window.location.href).then(() => {
-      setCopied(true)
-      setTimeout(() => setCopied(false), 2000) // Reset the copied state after 2 seconds
-    })
-  }
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000); // Reset the copied state after 2 seconds
+    });
+  };
 
-  if (loading) return <div className="flex justify-center items-center min-h-screen">Loading...</div>
-  if (error) return <div className="flex justify-center items-center min-h-screen text-red-500">{error}</div>
-  if (!post) return <div className="flex justify-center items-center min-h-screen">Post not found</div>
+  if (loading)
+    return (
+      <div className="flex justify-center items-center min-h-screen">
+        Loading...
+      </div>
+    );
+  if (error)
+    return (
+      <div className="flex justify-center items-center min-h-screen text-red-500">
+        {error}
+      </div>
+    );
+  if (!post)
+    return (
+      <div className="flex justify-center items-center min-h-screen">
+        Post not found
+      </div>
+    );
 
+  const parsedTags = post.tags ? parseTags(post.tags) : [];
+
+  const renderContent = (content: string) => {
+    return content.split("\n").map((line, index) => (
+      <React.Fragment key={index}>
+        {line}
+        {index < content.split("\n").length - 1 && <br />}
+      </React.Fragment>
+    ));
+  };
+  console.log(post.content);
   return (
     <div className="w-full  mx-auto md:pl-80 py-20">
-      <Card className="w-full border p-4 border-gray-200 shadow-sm">
+      <Card className="w-full border p-2 md:p-4 border-gray-200 shadow-sm">
         <CardHeader className="flex flex-row items-center gap-3 p-4 border-b border-gray-100">
           <Avatar className="h-10 w-10">
             <AvatarImage src={defaultAvatar} alt={post?.author || "User"} />
-            <AvatarFallback>{post?.author?.charAt(0).toUpperCase() || "U"}</AvatarFallback>
+            <AvatarFallback>
+              {typeof post.author === "string" && post.author.length > 0
+                ? post.author.charAt(0).toUpperCase()
+                : "U"}
+            </AvatarFallback>
           </Avatar>
           <div className="flex flex-col">
             <p className="text-sm font-medium text-gray-900">{post.author}</p>
-            <p className="text-xs text-gray-500">{new Date(post.createdAt).toLocaleDateString()}</p>
+            <p className="text-xs text-gray-500">
+              {new Date(post.createdAt).toLocaleDateString()}
+            </p>
           </div>
         </CardHeader>
 
         <CardContent className="p-4">
           <h1 className="text-2xl font-bold mb-4">{post.title}</h1>
 
-          {post.type === "post" && post.content && <p className="text-gray-700 mb-4">{post.content}</p>}
+          {post.content && (
+            <div className="text-gray-700 mb-4">
+              {renderContent(post.content)}
+            </div>
+          )}
 
-          {post.type === "image" && post.imageUrl && (
+          {post.imageUrl && (
             <div className="mb-4">
               <Image
                 src={post.imageUrl || "/placeholder.svg"}
@@ -180,6 +295,7 @@ export default function PostPage({ params }: { params: Promise<{ id: string }> }
                 height={0}
                 sizes="100vw"
                 className="w-full h-auto rounded-lg"
+                priority
               />
             </div>
           )}
@@ -196,7 +312,10 @@ export default function PostPage({ params }: { params: Promise<{ id: string }> }
           {post.type === "poll" && post.pollOptions && (
             <div className="space-y-2 mb-4">
               {post.pollOptions.map((option, index) => (
-                <div key={index} className="flex justify-between items-center border p-2 rounded-md">
+                <div
+                  key={index}
+                  className="flex justify-between items-center border p-2 rounded-md"
+                >
                   <span>{option.option}</span>
                   <span>{option.votes} votes</span>
                 </div>
@@ -204,9 +323,9 @@ export default function PostPage({ params }: { params: Promise<{ id: string }> }
             </div>
           )}
 
-          {post.tags && post.tags.length > 0 && (
+          {parsedTags.length > 0 && (
             <div className="flex flex-wrap gap-2 mt-4">
-              {post.tags.map((tag, index) => (
+              {parsedTags.map((tag, index) => (
                 <span
                   key={index}
                   className="inline-block bg-gray-100 text-gray-800 text-sm font-medium px-2.5 py-0.5 rounded-full border border-gray-200"
@@ -224,15 +343,19 @@ export default function PostPage({ params }: { params: Promise<{ id: string }> }
               variant={voteType === "upvote" ? "default" : "ghost"}
               size="icon"
               onClick={() => handleVote("upvote")}
+              className="w-14"
             >
               <ArrowBigUp className="h-5 w-5" />
+              <span className="ml-1 text-sm">{upvotes}</span>
             </Button>
             <Button
               variant={voteType === "downvote" ? "default" : "ghost"}
               size="icon"
               onClick={() => handleVote("downvote")}
+              className="w-14"
             >
               <ArrowBigDown className="h-5 w-5" />
+              <span className="ml-1 text-sm">{downvotes}</span>
             </Button>
           </div>
 
@@ -280,22 +403,37 @@ export default function PostPage({ params }: { params: Promise<{ id: string }> }
               comments.map((comment) => (
                 <div key={comment._id} className="p-4 border rounded-lg">
                   <div className="flex items-center gap-2 mb-2">
-                    <Avatar className="h-6 w-6">
-                      <AvatarImage src={defaultAvatar} alt={comment.author.username} />
-                      <AvatarFallback>{comment.author.username.charAt(0).toUpperCase()}</AvatarFallback>
+                    <Avatar className="md:h-10 h-6 w-6 md:w-10">
+                      <AvatarImage
+                        src={defaultAvatar}
+                        alt={comment.author.username}
+                      />
+                      <AvatarFallback>
+                        {comment.author?.username
+                          ? comment.author.username.charAt(0).toUpperCase()
+                          : "U"}
+                      </AvatarFallback>
                     </Avatar>
-                    <p className="text-sm font-semibold">{comment.author.username}</p>
-                    <p className="text-xs text-gray-500">{new Date(comment.createdAt).toLocaleString()}</p>
+                    <div className="flex flex-col">
+                      <p className="text-sm font-semibold">
+                        {comment.author.username}
+                      </p>
+                      <p className="text-xs text-gray-500">
+                        {new Date(comment.createdAt).toLocaleString()}
+                      </p>
+                    </div>
                   </div>
-                  <p className="text-gray-700">{comment.content}</p>
+                  <p className="text-gray-700 ml-8 md:ml-12">{comment.content}</p>
                 </div>
               ))
             ) : (
-              <p className="text-center text-gray-500">No comments yet. Be the first to comment!</p>
+              <p className="text-center text-gray-500">
+                No comments yet. Be the first to comment!
+              </p>
             )}
           </div>
         </div>
       </Card>
     </div>
-  )
+  );
 }
