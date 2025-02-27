@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { ArrowBigUp, ArrowBigDown, Share, Copy, Link as LinkIcon } from "lucide-react"
 import Image from "next/image"
-import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from "@/components/ui/dropdown-menu" // Assuming you have a dropdown menu component
+import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from "@/components/ui/dropdown-menu"
 
 interface Post {
   _id: string
@@ -153,8 +153,8 @@ export default function PostPage({ params }: { params: Promise<{ id: string }> }
   if (!post) return <div className="flex justify-center items-center min-h-screen">Post not found</div>
 
   return (
-    <div className="max-w-3xl mx-auto px-4 py-8">
-      <Card className="w-full border border-gray-200 shadow-sm">
+    <div className="w-full  mx-auto md:pl-80 py-20">
+      <Card className="w-full border p-4 border-gray-200 shadow-sm">
         <CardHeader className="flex flex-row items-center gap-3 p-4 border-b border-gray-100">
           <Avatar className="h-10 w-10">
             <AvatarImage src={defaultAvatar} alt={post?.author || "User"} />
