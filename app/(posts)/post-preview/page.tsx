@@ -12,7 +12,7 @@ export function PostPreview({ title, content, username }: PostPreviewProps) {
     <div className="bg-white rounded-md border border-gray-300 p-4">
       <div className="flex items-center gap-2 mb-2">
         <Avatar className="h-6 w-6">
-          <AvatarImage src="/placeholder.svg" />
+          {/* <AvatarImage src="/placeholder.svg" /> */}
           <AvatarFallback>U</AvatarFallback>
         </Avatar>
         <span className="text-sm font-medium">Posted by u/{username}</span>

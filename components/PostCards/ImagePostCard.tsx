@@ -199,7 +199,7 @@ const ImagePostCard: React.FC<ImagePostProps> = ({ post }) => {
     <Card className="w-full mx-auto border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-300 rounded-lg">
       <CardHeader className="flex flex-row items-center gap-3 p-4 border-b border-gray-100">
         <Avatar className="h-10 w-10">
-          <AvatarImage src="/placeholder-user.jpg" alt={post.author} />
+          {/* <AvatarImage src="/placeholder-user.jpg" alt={post.author} /> */}
           <AvatarFallback>{post.author.charAt(0).toUpperCase()}</AvatarFallback>
         </Avatar>
         <div className="flex flex-col">
@@ -238,6 +238,7 @@ const ImagePostCard: React.FC<ImagePostProps> = ({ post }) => {
             height={0}
             sizes="100vw"
             className="w-full h-auto rounded-lg"
+            priority
           />
         </div>
       </CardContent>
