@@ -381,6 +381,7 @@ const handleVote = async (newVoteType: "upvote" | "downvote") => {
             height={0}
             sizes="100vw"
             className="w-full h-auto rounded-lg"
+            priority
           />
         </div>
       </CardContent>

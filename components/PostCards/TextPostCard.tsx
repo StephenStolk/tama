@@ -331,6 +331,7 @@ const TextPostCard: React.FC<TextPostProps> = ({ post }) => {
               height={0}
               sizes="100vw"
               className="w-full h-auto rounded-lg"
+              priority
             />
           </div>
         )}

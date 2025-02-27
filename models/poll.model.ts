@@ -1,11 +1,11 @@
-import mongoose, {Schema, Document} from "mongoose";
+import mongoose, { Schema, Document } from "mongoose";
 
 interface IPoll extends Document {
     title: string;
     type: "poll";
     pollOptions?: {
-        option: string,
-        votes: number
+        option: string;
+        votes: number;
     }[];
     author: mongoose.Schema.Types.ObjectId | unknown;
     slug: string;
@@ -54,4 +54,5 @@ PollSchema.index({ author: 1 });
 
 
 const Poll = mongoose.models.Poll || mongoose.model<IPoll>("Poll", PollSchema);
+
 export default Poll;

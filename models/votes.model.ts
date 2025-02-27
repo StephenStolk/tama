@@ -12,7 +12,7 @@ const VoteSchema = new Schema<IVote>({
     postId: { type: Schema.Types.ObjectId, required: true },
     voteType: { type: String, enum: ["upvote", "downvote"], required: true },
     createdAt: { type: Date, default: Date.now },
-})
+});
 
 // Indexing for optimized queries
 VoteSchema.index({ postId: 1, author: 1 }, { unique: true }); // Prevent duplicate votes

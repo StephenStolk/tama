@@ -12,6 +12,11 @@ import { Input } from "@/components/ui/input";
 import { ArrowBigUp, ArrowBigDown, Share, MessageSquare } from "lucide-react";
 import { useRouter } from "next/navigation";
 
+interface PollOption {
+  option: string
+  votes: number
+}
+
 interface PollPostProps {
   post: {
     _id: string;

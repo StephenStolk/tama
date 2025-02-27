@@ -83,10 +83,28 @@ useEffect(() => {
         if (!res.ok) {
           console.error("Failed to fetch posts:", res.status, res.statusText);
         }
+        if (!pollRes.ok) {
+          console.error(
+            "Failed to fetch poll posts:",
+            pollRes.status,
+            pollRes.statusText
+          );
+        }
 
-        const { posts } = await res.json();
-        setPosts(posts);
+        // Only parse JSON if the response was successful
+        const textData = textRes.ok ? await textRes.json() : [];
+        const imageData = imageRes.ok ? await imageRes.json() : [];
+        const videoData = videoRes.ok ? await videoRes.json() : [];
+        const pollData = pollRes.ok ? await pollRes.json() : [];
+
+        const allPosts = [...textData, ...imageData, ...videoData, ...pollData];
+        allPosts.sort(
+          (a, b) =>
+            new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+        );
+        setPosts(allPosts);
       } catch (error) {
+        console.error("Error fetching posts:", error);
         console.error("Error fetching posts:", error);
       } finally {
         setLoading(false);
@@ -95,6 +113,28 @@ useEffect(() => {
 
     fetchPosts();
   }, []);
+
+
+// useEffect(() => {
+//     const fetchPosts = async () => {
+//       try {
+//         const res = await fetch("/api/posts/fetchall");
+
+//         if (!res.ok) {
+//           throw new Error(`Failed to fetch posts: ${res.status}`);
+//         }
+
+//         const { posts } = await res.json();
+//         setPosts(posts);
+//       } catch (error) {
+//         console.error(error);
+//       } finally {
+//         setLoading(false);
+//       }
+//     };
+
+//     fetchPosts();
+//   }, []);
 
   if (loading) return <p>Loading posts...</p>;
 

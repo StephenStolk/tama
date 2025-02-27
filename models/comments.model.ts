@@ -16,5 +16,7 @@ const CommentSchema = new Schema<IComment>({
   createdAt: { type: Date, default: Date.now },
 });
 
-// Create Model
-export const Comment = mongoose.model<IComment>("Comment", CommentSchema);
+// Check if the model already exists, if not, create it
+const Comment = mongoose.models.Comment || mongoose.model<IComment>("Comment", CommentSchema);
+
+export { Comment };

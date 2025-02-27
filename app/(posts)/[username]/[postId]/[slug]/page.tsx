@@ -3,14 +3,15 @@ import connectToDatabase from "@/lib/mongoose";
 import Post from "@/models/post.model";
 
 interface PostPageProps {
-  params: {
+  params: Promise<{
     username: string;
     postId: string;
     slug: string;
-  };
+  }>;
 }
 
-export default async function PostPage({ params }: PostPageProps) {
+export default async function PostPage(props: PostPageProps) {
+  const params = await props.params;
   await connectToDatabase(); // Ensure database connection
 
   const { username, postId, slug } = params; // No need to await params
