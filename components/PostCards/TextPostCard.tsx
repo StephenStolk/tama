@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 "use client";
 import Link from "next/link";
 import React, { useState, useEffect, useCallback } from "react";
@@ -20,7 +21,7 @@ interface TextPostProps {
     title: string;
     content: string;
     imageUrl?: string;
-    author: string;
+    author: { username: string };
     slug: string;
     tags: string[] | string;
     createdAt: string;
@@ -42,26 +43,103 @@ const TextPostCard: React.FC<TextPostProps> = ({ post }) => {
   const [upvotes, setUpvotes] = useState<number>(0);
   const [downvotes, setDownvotes] = useState<number>(0);
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
+  const [score, setScore] = useState<number>(0);
+    const [views, setViews] = useState<number>(0);
   const router = useRouter();
+
 
   const stripHtml = (html: string) => {
     return html.replace(/<\/?[^>]+(>|$)/g, ""); // Removes all HTML tags
   };
   
-  const checkAuth = useCallback(async () => {
-    try {
-      const response = await fetch("/api/auth/status", {
-        credentials: "include",
-      });
-      const data = await response.json();
-      setIsAuthenticated(data.isAuthenticated || false);
-      return data.isAuthenticated || false;
-    } catch (error: unknown) {
-      console.log(error);
-      setIsAuthenticated(false);
-      return false;
-    }
-  }, []);
+    const checkAuth = useCallback(async () => {
+        try {
+          const response = await fetch("/api/auth/status", {
+            credentials: "include",
+          });
+          const data = await response.json();
+          setIsAuthenticated(data.isAuthenticated || false);
+          return data.isAuthenticated || false;
+        } catch (error: unknown) {
+          console.log(error);
+          setIsAuthenticated(false);
+          return false;
+        }
+      }, []);
+  
+  
+  
+      const calculateScore = (upvotes: number, views: number, createdAt: string): number => {
+          return (
+            (upvotes || 0) * 2 +
+            (views || 0) * 0.5 +
+            (new Date().getTime() - new Date(createdAt).getTime()) * -0.0000001
+          );
+        };
+  
+        const handleScore = async (newScore: number, postId: string, type: string) => {
+          try {
+              const response = await fetch(`/api/posts/score`, {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  credentials: "include",
+                  body: JSON.stringify({ score: newScore, postId, type }), 
+              });
+      
+              if (response.ok) {
+                  const data = await response.json();
+                  setScore(data.score);  // Update UI with latest score
+              }
+          } catch (error) {
+              console.error("Failed to update score:", error);
+          }
+      };
+      
+  
+  
+        const trackView = async (postId: string, type: string) => {
+          const viewedPosts = JSON.parse(localStorage.getItem("viewedPosts") || "{}");
+        
+          if (viewedPosts[postId]) {
+            return;
+          }
+        
+          try {
+              await fetch(`/api/posts/views`, {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({ postId, type }),
+                });
+                
+        
+            viewedPosts[postId] = true;
+            localStorage.setItem("viewedPosts", JSON.stringify(viewedPosts));
+        
+            // Fetch updated views count from backend
+            const response = await fetch(`/api/posts/votes?postId=${postId}`);
+            const data = await response.json();
+            const newViews = data.views || 0;
+            
+            // Update score
+  
+            const newScore = calculateScore(upvotes, newViews, post.createdAt);
+            setViews(newViews);
+            setScore(newScore);
+            handleScore(newScore, postId, type);
+        
+          //   // Send updated score to backend
+          //   await fetch(`/api/posts/score?postId=${post._id}`, {
+          //     method: "POST",
+          //     headers: { "Content-Type": "application/json" },
+          //     credentials: "include",
+          //     body: JSON.stringify({ score: newScore }),
+          //   });
+        
+          } catch (error: unknown) {
+            console.error("Failed to update view count:", error);
+          }
+        };
+         
 
   const fetchVotes = useCallback(async () => {
     try {
@@ -128,12 +206,17 @@ const TextPostCard: React.FC<TextPostProps> = ({ post }) => {
     checkAuth();
   }, [checkAuth]);
 
+
+  
   const handleVote = async (newVoteType: "upvote" | "downvote") => {
     const authCheck = await checkAuth();
     if (!authCheck) {
       router.push("/login");
       return;
     }
+
+    let updatedUpvotes = upvotes;
+    let updatedDownvotes = downvotes;
 
     try {
       if (voteType === newVoteType) {
@@ -143,8 +226,15 @@ const TextPostCard: React.FC<TextPostProps> = ({ post }) => {
         });
         setVoteType(null);
 
-        if (newVoteType === "upvote") setUpvotes((prev: number) => prev - 1);
-        else setDownvotes((prev: number) => prev - 1);
+        if(newVoteType === "upvote"){
+            updatedUpvotes--;
+            //  setUpvotes((prev: number) => prev - 1);
+        }
+        else { 
+            // setDownvotes((prev: number) => prev - 1);
+            updatedDownvotes--;
+        }
+
       } else {
         await fetch("/api/posts/votes", {
           method: "POST",
@@ -159,19 +249,28 @@ const TextPostCard: React.FC<TextPostProps> = ({ post }) => {
         setVoteType(newVoteType);
 
         if (newVoteType === "upvote") {
-          setUpvotes((prev: number) => prev + 1);
-          if (voteType === "downvote") setDownvotes((prev) => prev - 1);
-        } else {
-          setDownvotes((prev) => prev + 1);
-          if (voteType === "upvote") {
-            setUpvotes((prev) => prev - 1);
+            updatedUpvotes++;
+            if (voteType === "downvote") updatedDownvotes--;
+          } else {
+            updatedDownvotes++;
+            if (voteType === "upvote") updatedUpvotes--;
           }
-        }
       }
+
+      const newScore = calculateScore(updatedUpvotes, views , post.createdAt);
+
+      setUpvotes(updatedUpvotes);
+    setDownvotes(updatedDownvotes);
+    setScore(newScore);
+    // handleScore(newScore, post, type);
+
     } catch (error) {
+      alert(error);
       console.error("Error handling vote:", error);
     }
   };
+
+
 
   const handleCommentSubmit = async () => {
     const authCheck = await checkAuth();
@@ -203,11 +302,11 @@ const TextPostCard: React.FC<TextPostProps> = ({ post }) => {
     <Card className="w-full mx-auto border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-300 rounded-lg">
       <CardHeader className="flex flex-row items-center gap-3 p-4 border-b border-gray-100">
         <Avatar className="h-10 w-10">
-          <AvatarImage src="/placeholder-user.jpg" alt={post.author} />
-          <AvatarFallback>{post.author.charAt(0).toUpperCase()}</AvatarFallback>
+          <AvatarImage src="/placeholder-user.jpg" alt={post.author.username} />
+          <AvatarFallback>{post.author.username.charAt(0).toUpperCase()}</AvatarFallback>
         </Avatar>
         <div className="flex flex-col">
-          <p className="text-sm font-medium text-gray-900">{post.author}</p>
+          <p className="text-sm font-medium text-gray-900">{post.author.username}</p>
           <p className="text-xs text-gray-500">
             {new Date(post.createdAt).toLocaleDateString()}
           </p>
@@ -219,8 +318,9 @@ const TextPostCard: React.FC<TextPostProps> = ({ post }) => {
           <h2 className="text-lg font-semibold text-gray-900 mb-2 cursor-pointer">
             {post.title}
           </h2>
-          <p className="text-sm text-gray-700 mb-4">{stripHtml(post.content)}</p>
         </Link>
+
+        <p className="text-sm mb-4">{stripHtml(post.content)}</p>
 
         {post.imageUrl && (
           <div className="mb-4">

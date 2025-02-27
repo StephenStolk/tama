@@ -81,6 +81,8 @@ export async function POST(request: NextRequest) {
       slug,
       author: decoded.userId,
       tags,
+      views: 0,
+      score: 0,
     });
 
     await newPost.save();
@@ -136,36 +138,36 @@ export async function POST(request: NextRequest) {
   
 
 
-
 export async function GET(request: NextRequest) {
-    try {
-      await connectToDatabase();
-  
-      const posts = await Post.find().populate("author","username");
-  
-      if(posts.length === 0) {
-        return NextResponse.json({
-          message: "No Post found"
-        }, { status: 404});
-      }
-      const postResponse = posts.map((post) => ({
-        _id: post._id,
-        title: post.title,
-        type: "post", // ✅ Add this to match frontend expectation
-        imageUrl: post.imageUrl,
-        slug: post.slug,
-        tags: post.tags,
-        author: post.author.username, // ✅ Include author username
-        createdAt: post.createdAt,
-      }));
-    
-        return NextResponse.json(postResponse, { status: 200 });
-    } catch (error: unknown) {
-      console.log(`Error fetching images: ${error}`);
-      return NextResponse.json({ message: "Error fetching images" }, { status: 500 });
-    }
-  }
+  try {
+    await connectToDatabase();
 
+    const posts = await Post.find().populate("author", "username");
+
+    if (posts.length === 0) {
+      return NextResponse.json({
+        message: "No Post found"
+      }, { status: 404 });
+    }
+
+    const postResponse = posts.map((post) => ({
+      _id: post._id,
+      title: post.title,
+      content: post.content,
+      type: "post",
+      imageUrl: post.imageUrl,
+      slug: post.slug,
+      tags: post.tags,
+      author: post.author.username,
+      createdAt: post.createdAt,
+    }));
+
+    return NextResponse.json(postResponse, { status: 200 });
+  } catch (error: unknown) {
+    console.error(`Error fetching posts: ${error}`);
+    return NextResponse.json({ message: "Error fetching posts" }, { status: 500 });
+  }
+}
 
 
 //   also, i am getting this warning:

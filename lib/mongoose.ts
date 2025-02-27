@@ -1,6 +1,7 @@
 // lib/mongoose.ts
 
 import mongoose from 'mongoose';
+import User from '@/models/user.model';
 
 const MONGODB_URI = process.env.MONGO_URI!; // Your MongoDB connection URI from MongoDB Atlas
 

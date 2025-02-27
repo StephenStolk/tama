@@ -1,6 +1,6 @@
 import mongoose, { Document, Schema } from "mongoose";
 
-export interface IVote extends Document {
+interface IVote extends Document {
     author: mongoose.Schema.Types.ObjectId;
     postId: mongoose.Types.ObjectId;
     voteType: "upvote" | "downvote";
@@ -19,4 +19,5 @@ VoteSchema.index({ postId: 1, author: 1 }, { unique: true }); // Prevent duplica
 VoteSchema.index({ createdAt: -1 }); // Speed up fetching latest votes
 VoteSchema.index({ postId: 1, voteType: 1 }); // Optimize vote aggregation
 
-export const Vote = mongoose.model<IVote>("Vote", VoteSchema);
+const Vote =  mongoose.model<IVote>("Vote", VoteSchema);
+export default Vote;

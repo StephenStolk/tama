@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import connectToDatabase from "@/lib/mongoose";
-import { Vote } from "@/models/votes.model";
+import Vote from "@/models/votes.model";
 import { cookies } from "next/headers";
 import slugify from "slugify";
 

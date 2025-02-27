@@ -97,6 +97,8 @@ export async function POST(request: NextRequest) {
       slug,
       author: decoded.userId,
       tags,
+      views: 0,
+      score: 0,
     });
 
     await newImage.save();

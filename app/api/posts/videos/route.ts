@@ -83,6 +83,8 @@ export async function POST(request: NextRequest) {
       slug,
       author: decoded.userId,
       tags,
+      views: 0,
+      score: 0,
     });
 
     await newVideo.save();
@@ -114,11 +116,11 @@ export async function GET(request: NextRequest) {
     const videoResponse = videos.map((video) => ({
       _id: video._id,
       title: video.title,
-      type: "video", // ✅ Ensures frontend recognizes post type
+      type: "video", 
       videoUrl: video.videoUrl,
       slug: video.slug,
       tags: video.tags,
-      author: video.author?.username, // ✅ Prevents errors if author is missing
+      author: video.author?.username, 
       createdAt: video.createdAt,
     }));
 

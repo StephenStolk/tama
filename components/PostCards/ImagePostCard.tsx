@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import React, { useCallback, useEffect, useState } from "react";
 import Image from "next/image";
 import {
@@ -18,9 +19,9 @@ interface ImagePostProps {
     _id: string;
     title: string;
     imageUrl: string;
-    author: string;
+    author: { username: string };
     createdAt: string;
-    tags: string[] | string; // Allow tags to be either an array or a string
+    tags: string[] | string; 
     slug: string;
   };
 }
@@ -40,22 +41,97 @@ const ImagePostCard: React.FC<ImagePostProps> = ({ post }) => {
   const [upvotes, setUpvotes] = useState<number>(0);
   const [downvotes, setDownvotes] = useState<number>(0);
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
+   const [score, setScore] = useState<number>(0);
+      const [views, setViews] = useState<number>(0);
   const router = useRouter();
 
-  const checkAuth = useCallback(async () => {
-    try {
-      const response = await fetch("/api/auth/status", {
-        credentials: "include",
-      });
-      const data = await response.json();
-      setIsAuthenticated(data.isAuthenticated || false);
-      return data.isAuthenticated || false;
-    } catch (error: unknown) {
-      console.log(error);
-      setIsAuthenticated(false);
-      return false;
-    }
-  }, []);
+   const checkAuth = useCallback(async () => {
+          try {
+            const response = await fetch("/api/auth/status", {
+              credentials: "include",
+            });
+            const data = await response.json();
+            setIsAuthenticated(data.isAuthenticated || false);
+            return data.isAuthenticated || false;
+          } catch (error: unknown) {
+            console.log(error);
+            setIsAuthenticated(false);
+            return false;
+          }
+        }, []);
+    
+    
+    
+        const calculateScore = (upvotes: number, views: number, createdAt: string): number => {
+            return (
+              (upvotes || 0) * 2 +
+              (views || 0) * 0.5 +
+              (new Date().getTime() - new Date(createdAt).getTime()) * -0.0000001
+            );
+          };
+    
+          const handleScore = async (newScore: number, postId: string, type: string) => {
+            try {
+                const response = await fetch(`/api/posts/score`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    credentials: "include",
+                    body: JSON.stringify({ score: newScore, postId, type }), 
+                });
+        
+                if (response.ok) {
+                    const data = await response.json();
+                    setScore(data.score);  // Update UI with latest score
+                }
+            } catch (error) {
+                console.error("Failed to update score:", error);
+            }
+        };
+        
+    
+    
+          const trackView = async (postId: string, type: string) => {
+            const viewedPosts = JSON.parse(localStorage.getItem("viewedPosts") || "{}");
+          
+            if (viewedPosts[postId]) {
+              return;
+            }
+          
+            try {
+                await fetch(`/api/posts/views`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ postId, type }),
+                  });
+                  
+          
+              viewedPosts[postId] = true;
+              localStorage.setItem("viewedPosts", JSON.stringify(viewedPosts));
+          
+              // Fetch updated views count from backend
+              const response = await fetch(`/api/posts/votes?postId=${postId}`);
+              const data = await response.json();
+              const newViews = data.views || 0;
+              
+              // Update score
+    
+              const newScore = calculateScore(upvotes, newViews, post.createdAt);
+              setViews(newViews);
+              setScore(newScore);
+              handleScore(newScore, postId, type);
+          
+            //   // Send updated score to backend
+            //   await fetch(`/api/posts/score?postId=${post._id}`, {
+            //     method: "POST",
+            //     headers: { "Content-Type": "application/json" },
+            //     credentials: "include",
+            //     body: JSON.stringify({ score: newScore }),
+            //   });
+          
+            } catch (error: unknown) {
+              console.error("Failed to update view count:", error);
+            }
+          };
 
   const fetchVotes = useCallback(async () => {
     try {
@@ -123,12 +199,63 @@ const ImagePostCard: React.FC<ImagePostProps> = ({ post }) => {
     checkAuth();
   }, [checkAuth]);
 
-  const handleVote = async (newVoteType: "upvote" | "downvote") => {
+//   const handleVote = async (newVoteType: "upvote" | "downvote") => {
+//     const authCheck = await checkAuth();
+//     if (!authCheck) {
+//       router.push("/login");
+//       return;
+//     }
+
+//     try {
+//       if (voteType === newVoteType) {
+//         await fetch(`/api/posts/votes?postId=${post._id}`, {
+//           method: "DELETE",
+//           credentials: "include",
+//         });
+//         setVoteType(null);
+
+//         if (newVoteType === "upvote") setUpvotes((prev: number) => prev - 1);
+//         else setDownvotes((prev: number) => prev - 1);
+//       } else {
+//         await fetch("/api/posts/votes", {
+//           method: "POST",
+//           headers: { "Content-Type": "application/json" },
+//           credentials: "include",
+//           body: JSON.stringify({
+//             postId: post._id,
+//             voteType: newVoteType,
+//             type: "image",
+//           }),
+//         });
+//         setVoteType(newVoteType);
+
+//         if (newVoteType === "upvote") {
+//           setUpvotes((prev: number) => prev + 1);
+//           if (voteType === "downvote") setDownvotes((prev) => prev - 1);
+//         } else {
+//           setDownvotes((prev) => prev + 1);
+//           if (voteType === "upvote") {
+//             setUpvotes((prev) => prev - 1);
+//           }
+//         }
+//       }
+//     } catch (error) {
+//       alert("An error occurred while processing your vote.");
+//       console.error("Error handling vote:", error);
+//     }
+//   };
+
+
+
+const handleVote = async (newVoteType: "upvote" | "downvote") => {
     const authCheck = await checkAuth();
     if (!authCheck) {
       router.push("/login");
       return;
     }
+
+    let updatedUpvotes = upvotes;
+    let updatedDownvotes = downvotes;
 
     try {
       if (voteType === newVoteType) {
@@ -138,8 +265,15 @@ const ImagePostCard: React.FC<ImagePostProps> = ({ post }) => {
         });
         setVoteType(null);
 
-        if (newVoteType === "upvote") setUpvotes((prev: number) => prev - 1);
-        else setDownvotes((prev: number) => prev - 1);
+        if(newVoteType === "upvote"){
+            updatedUpvotes--;
+            //  setUpvotes((prev: number) => prev - 1);
+        }
+        else { 
+            // setDownvotes((prev: number) => prev - 1);
+            updatedDownvotes--;
+        }
+
       } else {
         await fetch("/api/posts/votes", {
           method: "POST",
@@ -154,20 +288,29 @@ const ImagePostCard: React.FC<ImagePostProps> = ({ post }) => {
         setVoteType(newVoteType);
 
         if (newVoteType === "upvote") {
-          setUpvotes((prev: number) => prev + 1);
-          if (voteType === "downvote") setDownvotes((prev) => prev - 1);
-        } else {
-          setDownvotes((prev) => prev + 1);
-          if (voteType === "upvote") {
-            setUpvotes((prev) => prev - 1);
+            updatedUpvotes++;
+            if (voteType === "downvote") updatedDownvotes--;
+          } else {
+            updatedDownvotes++;
+            if (voteType === "upvote") updatedUpvotes--;
           }
-        }
       }
+
+      const newScore = calculateScore(updatedUpvotes, views , post.createdAt);
+
+      setUpvotes(updatedUpvotes);
+    setDownvotes(updatedDownvotes);
+    setScore(newScore);
+    // handleScore(newScore, post, type);
+
     } catch (error) {
-      alert("An error occurred while processing your vote.");
+      alert(error);
       console.error("Error handling vote:", error);
     }
   };
+
+
+
 
   const handleCommentSubmit = async () => {
     const authCheck = await checkAuth();
@@ -199,11 +342,11 @@ const ImagePostCard: React.FC<ImagePostProps> = ({ post }) => {
     <Card className="w-full mx-auto border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-300 rounded-lg">
       <CardHeader className="flex flex-row items-center gap-3 p-4 border-b border-gray-100">
         <Avatar className="h-10 w-10">
-          <AvatarImage src="/placeholder-user.jpg" alt={post.author} />
-          <AvatarFallback>{post.author.charAt(0).toUpperCase()}</AvatarFallback>
+          <AvatarImage src="/placeholder-user.jpg" alt={post.author.username} />
+          <AvatarFallback>{post.author.username.charAt(0).toUpperCase()}</AvatarFallback>
         </Avatar>
         <div className="flex flex-col">
-          <p className="text-sm font-medium text-gray-900">{post.author}</p>
+          <p className="text-sm font-medium text-gray-900">{post.author.username}</p>
           <p className="text-xs text-gray-500">
             {new Date(post.createdAt).toLocaleDateString()}
           </p>

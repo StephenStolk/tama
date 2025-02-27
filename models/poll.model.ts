@@ -10,6 +10,8 @@ interface IPoll extends Document {
     author: mongoose.Schema.Types.ObjectId | unknown;
     slug: string;
     tags: string[];
+    views: number;
+    score: number;
     createdAt: Date;
     updatedAt: Date;
 }
@@ -29,7 +31,7 @@ const PollSchema = new Schema<IPoll>(
       },
     ],
     author: { type: Schema.Types.ObjectId, ref: "User", required: true },
-    slug: { type: String, required: true, unique: true },
+    slug: { type: String, required: true, unique: true , index: true},
     tags: {
       type: [String],
       default: [],
@@ -38,13 +40,16 @@ const PollSchema = new Schema<IPoll>(
           message: "You can select upto 2 tags only.",
       },
   },
+  views: { type: Number, default: 0 },
+  score: {type: Number, default: 0},
+
   },
   { timestamps: true }
 )
 
 PollSchema.index({ createdAt: -1 }); 
 PollSchema.index({ tags: 1 }); 
-PollSchema.index({ slug: 1 }); 
+//PollSchema.index({ slug: 1 }); 
 PollSchema.index({ author: 1 }); 
 
 

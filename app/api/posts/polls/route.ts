@@ -80,6 +80,8 @@ export async function POST(request: Request) {
       slug,
       author: decoded.userId,
       tags,
+      views: 0,
+      score: 0,
     });
 
     await newPoll.save();
