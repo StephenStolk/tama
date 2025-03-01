@@ -20,4 +20,5 @@ VoteSchema.index({ createdAt: -1 }); // Speed up fetching latest votes
 VoteSchema.index({ postId: 1, voteType: 1 }); // Optimize vote aggregation
 
 const Vote =  mongoose.model<IVote>("Vote", VoteSchema);
+
 export default Vote;

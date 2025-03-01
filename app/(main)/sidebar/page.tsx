@@ -14,13 +14,14 @@ const Sidebar: React.FC<SidebarProps> = ({ isSidebarOpen, toggleSidebar }) => {
     // { name: 'My Posts', to: '/myposts' },
     { name: 'Feed', to: '/feed' }, // Updated
     { name: 'Clubs', to: '/clubs' }, // Updated
+    { name: 'Advertisement', to: '/advertisement' }, 
   ];
   
 
   return (
     <>
       {/* Sidebar for large screens */}
-      <div className="hidden md:block fixed top-20 left-4 w-1/5 h-[calc(100vh-8rem)] rounded-xl p-4 z-30 border border-gray">
+      <div className="hidden md:block fixed top-20 left-1 lg:left-4 w-1/4 lg:w-1/5 h-[calc(100vh-8rem)] rounded-xl p-4 z-30 border border-gray">
         <nav>
           <ul className="space-y-4">
             {tablinks.map((tab, index) => (

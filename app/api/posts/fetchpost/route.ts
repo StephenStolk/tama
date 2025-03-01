@@ -232,7 +232,7 @@ export async function GET(req: NextRequest) {
 
      // Ensure the User model is registered by accessing it here
      const userCheck = await User.findOne();
-    console.log("User model check:", userCheck);
+     console.log("User model check:", userCheck);
     // Fetch all posts
     const [textPosts, imagePosts, videoPosts, pollPosts] = await Promise.all([
       Post.find().populate("author", "username").lean(),

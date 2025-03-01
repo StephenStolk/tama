@@ -4,13 +4,12 @@ import Link from "next/link";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation"; // Import Next.js router
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+// import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import {
   Bell,
   MessageSquare,
   Plus,
-  Search,
   Menu as MenuIcon,
 } from "lucide-react";
 import Sidebar from "../sidebar/page";
@@ -21,12 +20,20 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { ChevronDown } from "lucide-react";
+import SearchBar from "../searchbar/page";
 
-export const Header: React.FC = () => {
+interface HeaderProps {
+  selectedTag: string | null;
+  setSelectedTag: (tag: string | null) => void;
+}
+
+export default function Header({ selectedTag, setSelectedTag }: HeaderProps) {
   const router = useRouter(); // Initialize router for navigation
   const [isSidebarOpen, setSidebarOpen] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [username, setUsername] = useState<string | null>(null);
+  //const [selectedTag, setSelectedTag] = useState<string | null>(null);
+
   // const [isHovered, setIsHovered] = useState(false);
 
   const toggleSidebar = () => {
@@ -88,6 +95,7 @@ export const Header: React.FC = () => {
     router.push("/createpost"); // Navigate to the create-post page
   };
 
+
   return (
     <>
       <header className="bg-white shadow fixed top-0 left-0 w-full z-50">
@@ -103,7 +111,7 @@ export const Header: React.FC = () => {
             Tamas
           </Link>
 
-          <div className="flex-1 max-w-xl mx-4 hidden md:block">
+          {/* <div className="flex-1 max-w-xl mx-4 hidden md:block">
             <div className="relative">
               <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 text-gray-400" />
               <Input
@@ -112,7 +120,15 @@ export const Header: React.FC = () => {
                 className="w-full pl-10"
               />
             </div>
-          </div>
+          </div> */}
+          <SearchBar selectedTag={selectedTag} setSelectedTag={setSelectedTag} />
+
+          {selectedTag && (
+  <div className="bg-gray-200 px-3 py-1 rounded-full text-sm flex items-center">
+    <span>Selected Tag: {selectedTag}</span> {/* ✅ Debugging log */}
+    <button onClick={() => setSelectedTag(null)} className="ml-2 text-red-500">✕</button>
+  </div>
+)}
 
           <nav className="flex items-center space-x-3 md:space-x-4">
             <Button

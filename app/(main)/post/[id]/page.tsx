@@ -50,6 +50,10 @@ export default function PostPage({
 
   const defaultAvatar = "https://api.dicebear.com/7.x/avatars/svg"
 
+  const stripHtml = (html: string) => {
+    return html.replace(/<\/?[^>]+(>|$)/g, ""); // Removes all HTML tags
+  };
+
   useEffect(() => {
     const fetchPost = async () => {
       if (!id) return
@@ -273,7 +277,7 @@ export default function PostPage({
         <CardContent className="p-4">
           <h1 className="text-2xl font-bold mb-4">{post.title}</h1>
 
-          {post.content && <div className="text-gray-700 mb-4">{renderContent(post.content)}</div>}
+          {post.content && <div className="text-gray-700 mb-4">{stripHtml(post.content)}</div>}
 
           {post.imageUrl && (
             <div className="mb-4">

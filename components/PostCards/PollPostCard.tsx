@@ -47,6 +47,7 @@ const PollPostCard: React.FC<PollPostProps> = ({ post }) => {
    const [score, setScore] = useState<number>(0);
       const [views, setViews] = useState<number>(0);
   const router = useRouter();
+  const authorName = post.author?.username || "Anonymous";
 
   
    const checkAuth = useCallback(async () => {
@@ -299,7 +300,7 @@ const PollPostCard: React.FC<PollPostProps> = ({ post }) => {
       <CardHeader className="flex flex-row items-center gap-3 p-4 border-b border-gray-100">
         <Avatar className="h-10 w-10">
           <AvatarImage src="/placeholder-user.jpg" alt={post.author.username} />
-          <AvatarFallback>{post.author.username.charAt(0).toUpperCase()}</AvatarFallback>
+                    <AvatarFallback>{authorName.charAt(0).toUpperCase()}</AvatarFallback>
         </Avatar>
         <div className="flex flex-col">
           <p className="text-sm font-medium text-gray-900">{post.author.username}</p>
