@@ -15,6 +15,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isSidebarOpen, toggleSidebar }) => {
     { name: 'Feed', to: '/feed' }, // Updated
     { name: 'Clubs', to: '/clubs' }, // Updated
     { name: 'Advertisement', to: '/advertisement' }, 
+    { name: 'Report a bug', to: '/reportbug' }, 
   ];
   
 
